@@ -8,7 +8,10 @@ export const resetPasswordEmail = async ({
   user: User;
   url: string;
 }) => {
-  const html = `
+  await sendEmail({
+    to: user.email,
+    subject: "Reset your password",
+    html: `
     <div style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.5; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px; background-color: #f9f9f9;">
       <h2 style="color: #333;">Reset Your Password</h2>
       <p>Hello ${user.name || "there"},</p>
@@ -21,11 +24,6 @@ export const resetPasswordEmail = async ({
       <p>If you did not request a password reset, please ignore this email.</p>
       <p>Thanks,<br/>Wad</p>
     </div>
-  `;
-
-  await sendEmail({
-    to: user.email,
-    subject: "Reset your password",
-    html,
+  `,
   });
 };

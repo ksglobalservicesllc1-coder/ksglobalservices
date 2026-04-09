@@ -19,8 +19,8 @@ export const sendEmail = async ({
     },
     body: JSON.stringify({
       sender: {
-        name: "wad",
-        email: "wadleyalphonse@gmail.com",
+        name: "KS Global Services",
+        email: "ksglobalservicesllc1@gmail.com",
       },
       to: [{ email: to }],
       subject,
