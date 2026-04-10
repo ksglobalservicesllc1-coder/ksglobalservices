@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { fetchBookingByUserIdAction } from "@/app/actions/fetchBookingByUserId";
 import { cn } from "@/lib/utils";
 import {
