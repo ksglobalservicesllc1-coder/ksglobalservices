@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "react-toastify";
 import { authClient } from "@/lib/auth/auth-client";
-
-// Shadcn UI
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -19,7 +17,6 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
-// Added Eye and EyeOff icons
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
 const resetPasswordSchema = z.object({
@@ -28,14 +25,14 @@ const resetPasswordSchema = z.object({
 
 type ResetPasswordFormType = z.infer<typeof resetPasswordSchema>;
 
-export default function ResetPasswordPage() {
+// 1. Move the logic into a separate component
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get("token");
 
   const [loading, setLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
-  // State to toggle password visibility
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
@@ -157,5 +154,20 @@ export default function ResetPasswordPage() {
         </Button>
       </form>
     </Form>
+  );
+}
+
+// 2. Wrap the component in Suspense for the main page export
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="animate-spin h-8 w-8 text-primary" />
+        </div>
+      }
+    >
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
