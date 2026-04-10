@@ -32,11 +32,9 @@ export default function EventDetails({ params }: Props) {
   const { eventId } = use(params);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  // --- Auth & Permissions ---
+  // --- Auth & Session ---
   const session = authClient.useSession();
-  const user = session.data?.user;
-  // Check if the authenticated user is a super-admin
-  const isSuperAdmin = user?.role === "super-admin";
+  const currentUser = session.data?.user;
 
   // --- Core State ---
   const [step, setStep] = useState(1);
@@ -52,14 +50,19 @@ export default function EventDetails({ params }: Props) {
   );
   const [phoneNumber, setPhoneNumber] = useState("");
 
-  // Update default selection based on role
+  // --- Logic Change: Determine UI based on Host Role ---
+  const hostIsSuperAdmin = event?.hostRole === "super-admin";
+
+  // Update default selection based on the Host's capabilities
   useEffect(() => {
-    if (isSuperAdmin) {
-      setConsultationType("video");
-    } else {
-      setConsultationType("phone");
+    if (event) {
+      if (hostIsSuperAdmin) {
+        setConsultationType("video");
+      } else {
+        setConsultationType("phone");
+      }
     }
-  }, [isSuperAdmin]);
+  }, [event, hostIsSuperAdmin]);
 
   // --- UI State ---
   const [loading, setLoading] = useState(true);
@@ -137,9 +140,9 @@ export default function EventDetails({ params }: Props) {
   const handleFinalBooking = async () => {
     if (!selectedSlot || !event) return;
 
-    // Strict validation: Prevent non-admins from booking video even if they bypass UI
-    if (consultationType === "video" && !isSuperAdmin) {
-      setError("Video consultations are only available for Super Admins.");
+    // Validation: Ensure video is only booked if host supports it
+    if (consultationType === "video" && !hostIsSuperAdmin) {
+      setError("Video consultations are not available for this professional.");
       return;
     }
 
@@ -154,7 +157,7 @@ export default function EventDetails({ params }: Props) {
       const res = await createBookingCheckout({
         eventId: event._id,
         adminId: event.adminId,
-        userId: user?.id || "",
+        userId: currentUser?.id || "",
         startTime: selectedSlot.startTime,
         endTime: selectedSlot.endTime,
         consultationType,
@@ -347,10 +350,10 @@ export default function EventDetails({ params }: Props) {
 
                   {/* Consultation Selection Grid */}
                   <div
-                    className={`grid gap-4 mb-8 ${isSuperAdmin ? "grid-cols-1 sm:grid-cols-2" : "md:grid-cols-2 grid-cols-1"}`}
+                    className={`grid gap-4 mb-8 ${hostIsSuperAdmin ? "grid-cols-1 sm:grid-cols-2" : "md:grid-cols-2 grid-cols-1"}`}
                   >
-                    {/* ONLY RENDER VIDEO OPTION IF SUPER ADMIN */}
-                    {isSuperAdmin && (
+                    {/* ONLY RENDER VIDEO OPTION IF HOST IS SUPER ADMIN */}
+                    {hostIsSuperAdmin && (
                       <button
                         onClick={() => setConsultationType("video")}
                         className={`p-6 rounded-3xl border-2 text-left transition-all ${
@@ -420,7 +423,7 @@ export default function EventDetails({ params }: Props) {
                   <button
                     onClick={handleFinalBooking}
                     disabled={bookingLoading}
-                    className="w-full py-5 bg-blue-700 text-white rounded-2xl font-bold text-lg flex items-center justify-center gap-3 hover:bg-blue-800 transition-all shadow-xl shadow-blue-100 disabled:opacity-50"
+                    className="w-full py-5 bg-blue-700 text-white rounded-2xl font-bold md:text-lg text-md flex items-center justify-center gap-3 hover:bg-blue-800 transition-all shadow-xl shadow-blue-100 disabled:opacity-50"
                   >
                     {bookingLoading
                       ? "Processing..."

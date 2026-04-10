@@ -5,8 +5,7 @@ import { Schedule } from "@/lib/models/Schedule";
 import { Booking } from "@/lib/models/Booking";
 import { Event } from "@/lib/models/Event";
 import { Types } from "mongoose";
-import { getAdminTimezone } from "@/app/actions/timezoneAction";
-import { convertToUTC, convertFromUTC } from "@/lib/timezone-converter";
+import { getAdminTimezoneById } from "@/app/actions/timezoneAction";
 
 export interface AvailableSlot {
   startTime: Date;
@@ -36,11 +35,12 @@ export async function getAvailableSlots(
     if (!Types.ObjectId.isValid(adminId)) {
       throw new Error("Invalid adminId");
     }
+
     if (!Types.ObjectId.isValid(eventId)) {
       throw new Error("Invalid eventId");
     }
 
-    // Validate date string format
+    // Validate date
     if (!/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
       throw new Error("Invalid date format. Expected YYYY-MM-DD");
     }
@@ -48,21 +48,23 @@ export async function getAvailableSlots(
     const adminObjectId = new Types.ObjectId(adminId);
     const eventObjectId = new Types.ObjectId(eventId);
 
-    // Get admin timezone with caching
+    // FIXED: get timezone by adminId (no auth)
     let adminTimezone = "UTC";
+
     try {
       const now = Date.now();
+
       if (timezoneCache && now - timezoneCache.timestamp < CACHE_TTL) {
         adminTimezone = timezoneCache.timezone;
       } else {
-        adminTimezone = await getAdminTimezone();
+        adminTimezone = await getAdminTimezoneById(adminId);
         timezoneCache = { timezone: adminTimezone, timestamp: now };
       }
     } catch (error) {
       console.warn("Using default timezone UTC:", error);
     }
 
-    // Get event details with projection for performance
+    // Get event
     const event = await Event.findById(eventObjectId)
       .select("durationMinutes bufferMinutes minimumNoticeMinutes")
       .lean();
@@ -75,7 +77,7 @@ export async function getAvailableSlots(
     const bufferMinutes = event.bufferMinutes || 0;
     const minimumNoticeMinutes = event.minimumNoticeMinutes || 0;
 
-    // Parse date and get day of week
+    // Date handling
     const startOfDay = new Date(`${dateString}T00:00:00.000Z`);
     if (isNaN(startOfDay.getTime())) {
       throw new Error("Invalid date");
@@ -93,9 +95,10 @@ export async function getAvailableSlots(
       "Friday",
       "Saturday",
     ];
+
     const dayOfWeek = dayNames[startOfDay.getUTCDay()];
 
-    // Get schedule with lean
+    // Get schedule
     const schedule = await Schedule.findOne({
       adminId: adminObjectId,
       dayOfWeek,
@@ -105,15 +108,15 @@ export async function getAvailableSlots(
       return [];
     }
 
-    // Get enabled slots
     const enabledSlots = schedule.timeSlots.filter(
       (slot: any) => slot.isEnabled,
     );
+
     if (enabledSlots.length === 0) {
       return [];
     }
 
-    // Get existing bookings with projection
+    // Get bookings
     const existingBookings = await Booking.find(
       {
         adminId: adminObjectId,
@@ -127,13 +130,13 @@ export async function getAvailableSlots(
       },
     ).lean();
 
-    // Calculate minimum allowed start time
+    // Min notice
     const now = new Date();
     const minStartTime = new Date(
       now.getTime() + minimumNoticeMinutes * 60 * 1000,
     );
 
-    // Generate all possible slots
+    // Generate slots
     const allPossibleSlots: TimeRange[] = [];
 
     for (const timeSlot of enabledSlots) {
@@ -144,7 +147,6 @@ export async function getAvailableSlots(
         continue;
       }
 
-      // Create datetime objects for the selected date
       const dayStart = new Date(startOfDay);
       dayStart.setUTCHours(
         slotStart.getUTCHours(),
@@ -156,8 +158,8 @@ export async function getAvailableSlots(
       const dayEnd = new Date(startOfDay);
       dayEnd.setUTCHours(slotEnd.getUTCHours(), slotEnd.getUTCMinutes(), 0, 0);
 
-      // Generate slots
       let currentStart = new Date(dayStart);
+
       const slotDurationMs = eventDuration * 60 * 1000;
       const stepMs = (eventDuration + bufferMinutes) * 60 * 1000;
 
@@ -171,31 +173,23 @@ export async function getAvailableSlots(
       }
     }
 
-    // Sort slots by start time
+    // Sort
     allPossibleSlots.sort((a, b) => a.start.getTime() - b.start.getTime());
 
-    // Check for overlaps with existing bookings
     const bookedRanges = existingBookings.map((booking) => ({
       start: new Date(booking.startTime),
       end: new Date(booking.endTime),
     }));
 
-    // Filter available slots
+    // Filter
     const availableSlots: AvailableSlot[] = [];
 
     for (const slot of allPossibleSlots) {
-      // Check minimum notice period
-      if (slot.start < minStartTime) {
-        continue;
-      }
+      if (slot.start < minStartTime) continue;
+      if (slot.start < now) continue;
 
-      // Check if slot is in the past
-      if (slot.start < now) {
-        continue;
-      }
-
-      // Check for overlaps
       let isOverlapping = false;
+
       for (const booked of bookedRanges) {
         if (slot.start < booked.end && slot.end > booked.start) {
           isOverlapping = true;
@@ -213,14 +207,7 @@ export async function getAvailableSlots(
       }
     }
 
-    // Limit slots to prevent overwhelming UI (max 50 slots per day)
-    const limitedSlots = availableSlots.slice(0, 50);
-
-    return limitedSlots.map((slot) => ({
-      ...slot,
-      startTime: new Date(slot.startTime),
-      endTime: new Date(slot.endTime),
-    }));
+    return availableSlots.slice(0, 50);
   } catch (error) {
     console.error("Error fetching available slots:", error);
     return [];

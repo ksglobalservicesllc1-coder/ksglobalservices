@@ -9,8 +9,8 @@ export interface IBooking extends Document {
   status: "pending" | "confirmed" | "expired";
   consultationType: "phone" | "video";
   phoneNumber?: string;
-  zoomJoinUrl?: string; // User link
-  zoomStartUrl?: string; // Admin link
+  zoomJoinUrl?: string;
+  zoomStartUrl?: string;
   stripeSessionId?: string;
   expiresAt: Date;
 }

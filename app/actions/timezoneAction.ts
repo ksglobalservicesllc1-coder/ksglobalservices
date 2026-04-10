@@ -4,7 +4,7 @@ import Timezone from "@/lib/models/Timezone";
 import connectDB from "@/lib/db";
 import { verifyAdmin } from "@/lib/auth/check-auth";
 
-// Set admin timezone
+// ADMIN ONLY (keep this)
 export async function setAdminTimezone(timezone: string) {
   await connectDB();
 
@@ -14,7 +14,7 @@ export async function setAdminTimezone(timezone: string) {
   const config = await Timezone.findOneAndUpdate(
     { adminId },
     { timezone },
-    { returnDocument: "after", upsert: true, runValidators: true },
+    { new: true, upsert: true, runValidators: true },
   );
 
   return {
@@ -23,17 +23,21 @@ export async function setAdminTimezone(timezone: string) {
   };
 }
 
-// Get admin timezone
+// 2. Update your existing getAdminTimezone (for the Admin Settings page)
 export async function getAdminTimezone() {
   await connectDB();
+  const user = await verifyAdmin(); // This stays for the Admin Dashboard
+  return getAdminTimezoneById(user.id);
+}
 
-  const user = await verifyAdmin();
-  const adminId = user.id;
+// PUBLIC (FIXED: no verifyAdmin)
+export async function getAdminTimezoneById(adminId: string) {
+  await connectDB();
 
   const config = await Timezone.findOne({ adminId });
 
   if (!config) {
-    throw new Error("Timezone not set");
+    return "UTC"; // safe fallback
   }
 
   return config.timezone;

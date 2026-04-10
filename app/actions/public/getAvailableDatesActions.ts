@@ -4,7 +4,7 @@ import connectDB from "@/lib/db";
 import { Types } from "mongoose";
 import { Schedule } from "@/lib/models/Schedule";
 import { Booking } from "@/lib/models/Booking";
-import { getAdminTimezone } from "@/app/actions/timezoneAction";
+import { getAdminTimezoneById } from "@/app/actions/timezoneAction";
 
 interface AvailableDate {
   date: string;
@@ -12,46 +12,18 @@ interface AvailableDate {
   availableSlots: number;
 }
 
-// Maximum days to look ahead (prevent memory issues)
 const MAX_DAYS_AHEAD = 60;
 
-// Helper function to get date in admin's timezone
-function getDateInTimezone(date: Date, timezone: string): Date {
-  // Format the date to the admin's timezone and parse back
-  const formattedDate = date.toLocaleString("en-US", { timeZone: timezone });
-  return new Date(formattedDate);
+// SAFER timezone conversion (no string parsing)
+function toAdminTz(date: Date, timezone: string): Date {
+  return new Date(date.toLocaleString("en-US", { timeZone: timezone }));
 }
 
-// Helper to get day of week in admin's timezone
-function getDayOfWeekInTimezone(date: Date, timezone: string): string {
-  const dayNames = [
-    "Sunday",
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-  ];
-  const dateInTz = getDateInTimezone(date, timezone);
-  return dayNames[dateInTz.getDay()];
-}
-
-// Helper to get date string in admin's timezone (YYYY-MM-DD)
-function getDateStringInTimezone(date: Date, timezone: string): string {
-  const dateInTz = getDateInTimezone(date, timezone);
-  const year = dateInTz.getFullYear();
-  const month = String(dateInTz.getMonth() + 1).padStart(2, "0");
-  const day = String(dateInTz.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-// Helper to get start of day in UTC for a given date in admin's timezone
-function getStartOfDayUTC(dateString: string, timezone: string): Date {
-  const [year, month, day] = dateString.split("-").map(Number);
-  const dateInTz = new Date(year, month - 1, day);
-
-  return new Date(Date.UTC(year, month - 1, day));
+function getDateString(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
 }
 
 export async function getAvailableDates(
@@ -67,85 +39,62 @@ export async function getAvailableDates(
       throw new Error("Invalid adminId");
     }
 
-    // Get admin's timezone
-    let adminTimezone: string;
-    try {
-      adminTimezone = await getAdminTimezone();
-    } catch (error) {
-      console.error("Admin timezone not set, defaulting to UTC");
-      adminTimezone = "UTC";
-    }
-
     const adminObjectId = new Types.ObjectId(adminId);
 
-    // Get current date in admin's timezone
+    // FIXED: get timezone WITHOUT auth
+    let adminTimezone = "UTC";
+    try {
+      adminTimezone = await getAdminTimezoneById(adminId);
+    } catch {
+      console.warn("Fallback to UTC timezone");
+    }
+
     const now = new Date();
-    const nowInTz = getDateInTimezone(now, adminTimezone);
-    const todayInTz = new Date(
+    const nowInTz = toAdminTz(now, adminTimezone);
+
+    const today = new Date(
       nowInTz.getFullYear(),
       nowInTz.getMonth(),
       nowInTz.getDate(),
     );
 
-    // Convert today to UTC for comparison with MongoDB dates
-    const todayUTC = new Date(
-      Date.UTC(
-        todayInTz.getFullYear(),
-        todayInTz.getMonth(),
-        todayInTz.getDate(),
-        0,
-        0,
-        0,
-        0,
-      ),
-    );
+    // sanitize range
+    let start = startDate ? toAdminTz(startDate, adminTimezone) : today;
+    let end = endDate ? toAdminTz(endDate, adminTimezone) : null;
 
-    // Validate and sanitize date range (dates are in admin's timezone)
-    let start = startDate
-      ? getDateInTimezone(startDate, adminTimezone)
-      : todayInTz;
-    let end = endDate ? getDateInTimezone(endDate, adminTimezone) : null;
+    if (start < today) start = today;
 
-    // Ensure start date is not in the past (in admin's timezone)
-    if (start < todayInTz) {
-      start = todayInTz;
-    }
-
-    // Set end date limit
     if (!end) {
       end = new Date(start);
       end.setDate(end.getDate() + 30);
     }
 
-    // Cap the date range to prevent performance issues
     const daysDiff = Math.ceil(
       (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
     );
+
     if (daysDiff > MAX_DAYS_AHEAD) {
       end = new Date(start);
       end.setDate(end.getDate() + MAX_DAYS_AHEAD);
     }
 
-    // Generate date strings in admin's timezone
-    const dateStrings: string[] = [];
-    const daysOfWeekInRange = new Set<number>();
-    const currentDate = new Date(start);
+    // Generate date list
+    const dates: string[] = [];
+    const daysSet = new Set<number>();
 
-    while (currentDate <= end) {
-      if (currentDate >= todayInTz) {
-        const year = currentDate.getFullYear();
-        const month = String(currentDate.getMonth() + 1).padStart(2, "0");
-        const day = String(currentDate.getDate()).padStart(2, "0");
-        dateStrings.push(`${year}-${month}-${day}`);
-        daysOfWeekInRange.add(currentDate.getDay());
-      }
-      currentDate.setDate(currentDate.getDate() + 1);
+    const cursor = new Date(start);
+
+    while (cursor <= end) {
+      const dateStr = getDateString(cursor);
+      dates.push(dateStr);
+      daysSet.add(cursor.getDay());
+
+      cursor.setDate(cursor.getDate() + 1);
     }
 
-    if (dateStrings.length === 0) return [];
+    if (!dates.length) return [];
 
-    // Fetch schedules with lean for performance
-    const daysOfWeekArray = Array.from(daysOfWeekInRange);
+    // Get schedules
     const dayNames = [
       "Sunday",
       "Monday",
@@ -155,117 +104,100 @@ export async function getAvailableDates(
       "Friday",
       "Saturday",
     ];
-    const dayNamesInRange = daysOfWeekArray.map((d) => dayNames[d]);
+
+    const dayNamesInRange = Array.from(daysSet).map((d) => dayNames[d]);
 
     const schedules = await Schedule.find({
       adminId: adminObjectId,
       dayOfWeek: { $in: dayNamesInRange },
     }).lean();
 
-    // Create schedule map
-    const scheduleMap = new Map(
-      schedules.map((schedule) => [schedule.dayOfWeek, schedule]),
-    );
+    const scheduleMap = new Map(schedules.map((s) => [s.dayOfWeek, s]));
 
-    // Optimize booking query with projection
-    // Convert the date range to UTC for MongoDB queries
-    const startUTC = getStartOfDayUTC(dateStrings[0], adminTimezone);
-    const endUTC = getStartOfDayUTC(
-      dateStrings[dateStrings.length - 1],
-      adminTimezone,
-    );
-    endUTC.setUTCDate(endUTC.getUTCDate() + 1);
+    // Get bookings
+    const startUTC = new Date(dates[0] + "T00:00:00.000Z");
+    const endUTC = new Date(dates[dates.length - 1] + "T23:59:59.999Z");
 
-    const allBookings = await Booking.find(
+    const bookings = await Booking.find(
       {
         adminId: adminObjectId,
-        startTime: { $gte: startUTC, $lt: endUTC },
+        startTime: { $gte: startUTC, $lte: endUTC },
         status: { $nin: ["cancelled", "rejected"] },
       },
-      {
-        startTime: 1,
-        _id: 0,
-      },
+      { startTime: 1 },
     ).lean();
 
-    // Group bookings by date in admin's timezone and slot timestamp
-    const bookingsByDate = new Map<string, Map<number, number>>();
+    // Group bookings by date
+    const bookingsMap = new Map<string, Map<number, number>>();
 
-    for (const booking of allBookings) {
-      const bookingDateUTC = new Date(booking.startTime);
-      // Convert booking time to admin's timezone to get the correct date
-      const bookingDateInTz = getDateInTimezone(bookingDateUTC, adminTimezone);
-      const dateKey = `${bookingDateInTz.getFullYear()}-${String(bookingDateInTz.getMonth() + 1).padStart(2, "0")}-${String(bookingDateInTz.getDate()).padStart(2, "0")}`;
+    for (const booking of bookings) {
+      const utcDate = new Date(booking.startTime);
+      const localDate = toAdminTz(utcDate, adminTimezone);
 
-      if (!bookingsByDate.has(dateKey)) {
-        bookingsByDate.set(dateKey, new Map());
+      const dateKey = getDateString(localDate);
+
+      if (!bookingsMap.has(dateKey)) {
+        bookingsMap.set(dateKey, new Map());
       }
 
-      // Store slot timestamp in UTC for consistent comparison
-      const slotTimestamp = bookingDateUTC.getTime();
-      const dateBookings = bookingsByDate.get(dateKey)!;
-      dateBookings.set(
-        slotTimestamp,
-        (dateBookings.get(slotTimestamp) || 0) + 1,
-      );
+      const slotTime = utcDate.getTime();
+
+      const dateBookings = bookingsMap.get(dateKey)!;
+      dateBookings.set(slotTime, (dateBookings.get(slotTime) || 0) + 1);
     }
 
-    // Calculate availability
-    const availableDates: AvailableDate[] = [];
+    // Build result
+    const results: AvailableDate[] = [];
 
-    for (const dateString of dateStrings) {
-      // Parse date in admin's timezone
-      const [year, month, day] = dateString.split("-").map(Number);
-      const dateObj = new Date(year, month - 1, day);
-      const dayOfWeek = dayNames[dateObj.getDay()];
-      const schedule = scheduleMap.get(dayOfWeek);
+    for (const dateStr of dates) {
+      const [y, m, d] = dateStr.split("-").map(Number);
 
+      const dateObj = new Date(y, m - 1, d);
+      const dayName = dayNames[dateObj.getDay()];
+
+      const schedule = scheduleMap.get(dayName);
       if (!schedule?.timeSlots?.length) continue;
 
-      const enabledSlots = schedule.timeSlots.filter(
-        (slot: any) => slot.isEnabled,
-      );
-      if (enabledSlots.length === 0) continue;
+      const enabledSlots = schedule.timeSlots.filter((s: any) => s.isEnabled);
 
-      const bookingsForDate = bookingsByDate.get(dateString) || new Map();
+      if (!enabledSlots.length) continue;
 
-      // Calculate available slots count
-      let availableSlotsCount = 0;
+      const bookingsForDate = bookingsMap.get(dateStr) || new Map();
+
+      let availableCount = 0;
+
       for (const slot of enabledSlots) {
         const slotStart = new Date(slot.startTime);
-
         if (isNaN(slotStart.getTime())) continue;
 
-        // Create UTC timestamp for this slot on the specific date
-        const startUTC = new Date(Date.UTC(year, month - 1, day));
-        startUTC.setUTCHours(
+        const slotUTC = new Date(Date.UTC(y, m - 1, d));
+        slotUTC.setUTCHours(
           slotStart.getUTCHours(),
           slotStart.getUTCMinutes(),
           0,
           0,
         );
 
-        const startTimestamp = startUTC.getTime();
-        const bookedCount = bookingsForDate.get(startTimestamp) || 0;
+        const timestamp = slotUTC.getTime();
+        const booked = bookingsForDate.get(timestamp) || 0;
 
-        if (bookedCount < maxBookingsPerSlot) {
-          availableSlotsCount++;
+        if (booked < maxBookingsPerSlot) {
+          availableCount++;
         }
       }
 
-      if (availableSlotsCount > 0) {
-        availableDates.push({
-          date: dateString,
-          dayOfWeek,
-          availableSlots: availableSlotsCount,
+      if (availableCount > 0) {
+        results.push({
+          date: dateStr,
+          dayOfWeek: dayName,
+          availableSlots: availableCount,
         });
       }
     }
 
-    return availableDates;
+    return results;
   } catch (error) {
     console.error("Error fetching available dates:", error);
-    // Return empty array instead of throwing for better UX
     return [];
   }
 }

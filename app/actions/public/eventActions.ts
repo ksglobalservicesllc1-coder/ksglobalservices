@@ -3,6 +3,8 @@
 import connectDB from "@/lib/db";
 import { Event } from "@/lib/models/Event";
 import mongoose from "mongoose";
+import client from "@/lib/db-client";
+import { ObjectId } from "mongodb";
 
 // Get events by adminId
 export async function getEventsByAdmin(adminId: string) {
@@ -48,7 +50,7 @@ export async function getEventsByAdmin(adminId: string) {
   }
 }
 
-// Get a single event by id (only if active)
+// Get a single event by id (with host role from auth_db)
 export async function getEventById(eventId: string) {
   try {
     await connectDB();
@@ -61,6 +63,7 @@ export async function getEventById(eventId: string) {
       };
     }
 
+    // 1. Fetch the event using Mongoose
     const event = await Event.findOne({
       _id: new mongoose.Types.ObjectId(eventId),
       isActive: true,
@@ -76,6 +79,16 @@ export async function getEventById(eventId: string) {
       };
     }
 
+    // 2. Query auth_db using the native client for the host's role
+    const db = client.db("auth_db");
+    const adminUser = await db
+      .collection("user")
+      .findOne(
+        { _id: new ObjectId(event.adminId.toString()) },
+        { projection: { role: 1 } },
+      );
+
+    // 3. Sanitize and include the hostRole
     const sanitizedEvent = {
       _id: event._id.toString(),
       adminId: event.adminId.toString(),
@@ -83,6 +96,8 @@ export async function getEventById(eventId: string) {
       description: event.description || null,
       price: event.price,
       durationMinutes: event.durationMinutes,
+      // Provide hostRole so the frontend can toggle Video Call
+      hostRole: adminUser?.role || "user",
     };
 
     return {
@@ -90,7 +105,7 @@ export async function getEventById(eventId: string) {
       data: sanitizedEvent,
     };
   } catch (error) {
-    console.error("Error fetching event:", error);
+    console.error("Error fetching event details:", error);
     return {
       success: false,
       error: "Failed to fetch event",
