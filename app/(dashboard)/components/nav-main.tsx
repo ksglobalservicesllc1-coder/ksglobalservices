@@ -27,9 +27,38 @@ import {
   CalendarDays,
   UserRoundCog,
   ChevronRight,
+  ClipboardPen,
+  UserCheck,
+  Calculator,
+  Stamp,
+  Briefcase,
+  Languages,
 } from "lucide-react";
 
 import { authClient } from "@/lib/auth/auth-client";
+
+const FORM_CATEGORIES = [
+  {
+    title: "Immigration & USCIS Support",
+    icon: <UserCheck className="size-4 shrink-0" />,
+  },
+  {
+    title: "Tax & Financial Services",
+    icon: <Calculator className="size-4 shrink-0" />,
+  },
+  {
+    title: "Notary & Document Services",
+    icon: <Stamp className="size-4 shrink-0" />,
+  },
+  {
+    title: "Business & Administrative Services",
+    icon: <Briefcase className="size-4 shrink-0" />,
+  },
+  {
+    title: "Translation & Language Services",
+    icon: <Languages className="size-4 shrink-0" />,
+  },
+];
 
 export function NavMain() {
   const pathname = usePathname();
@@ -37,13 +66,18 @@ export function NavMain() {
 
   const role = session?.user?.role;
 
-  // Added transition-colors and duration-200 for the smooth effect
-  const getClass = (path: string) =>
-    `transition-colors duration-100 ${
-      pathname === path
-        ? "bg-blue-700 text-white"
-        : "hover:bg-blue-600 hover:text-white"
+  const createSlug = (text: string) =>
+    text.replace(/&/g, "").replace(/\s+/g, "-").toLowerCase();
+
+  // Updated getClass to handle active hover states
+  const getClass = (path: string) => {
+    const isActive = pathname === path;
+    return `transition-colors duration-200 ${
+      isActive
+        ? "bg-blue-700 text-white hover:bg-blue-800 hover:text-white"
+        : "hover:bg-blue-700 hover:text-white"
     }`;
+  };
 
   if (isPending) return null;
 
@@ -94,6 +128,7 @@ export function NavMain() {
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton
                       tooltip="Bookings"
+                      // We keep the trigger gray on hover, or use getClass if you want it blue when a child is active
                       className="transition-colors duration-200"
                     >
                       <Timer />
@@ -113,7 +148,6 @@ export function NavMain() {
                           </Link>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
-
                       {role === "super-admin" && (
                         <SidebarMenuSubItem>
                           <SidebarMenuSubButton
@@ -130,6 +164,47 @@ export function NavMain() {
                   </CollapsibleContent>
                 </SidebarMenuItem>
               </Collapsible>
+
+              {/* COLLAPSIBLE SUBMISSIONS
+              {role === "super-admin" && (
+                <Collapsible asChild className="group/collapsible">
+                  <SidebarMenuItem>
+                    <CollapsibleTrigger asChild>
+                      <SidebarMenuButton
+                        tooltip="Forms"
+                        className="transition-colors duration-200"
+                      >
+                        <ClipboardPen />
+                        <span>Submissions</span>
+                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                      </SidebarMenuButton>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {FORM_CATEGORIES.map((category) => {
+                          const url = `/admin/submissions/${createSlug(category.title)}`;
+                          return (
+                            <SidebarMenuSubItem key={category.title}>
+                              <SidebarMenuSubButton
+                                asChild
+                                className={getClass(url)}
+                              >
+                                <Link
+                                  href={url}
+                                  className="flex items-center gap-2"
+                                >
+                                  {category.icon}
+                                  <span>{category.title}</span>
+                                </Link>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </SidebarMenuItem>
+                </Collapsible>
+              )} */}
             </>
           )}
 

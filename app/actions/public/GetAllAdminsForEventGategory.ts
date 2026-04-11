@@ -1,7 +1,7 @@
 "use server";
 
 import connectDB from "@/lib/db";
-import client from "@/lib/db-client"; // Your MongoDB client for auth_db access
+import client from "@/lib/db-client";
 import { Event } from "@/lib/models/Event";
 import { ObjectId } from "mongodb";
 
