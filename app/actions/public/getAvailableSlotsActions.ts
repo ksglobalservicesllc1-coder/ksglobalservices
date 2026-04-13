@@ -48,7 +48,7 @@ export async function getAvailableSlots(
     const adminObjectId = new Types.ObjectId(adminId);
     const eventObjectId = new Types.ObjectId(eventId);
 
-    // FIXED: get timezone by adminId (no auth)
+    // get timezone by adminId (no auth)
     let adminTimezone = "UTC";
 
     try {

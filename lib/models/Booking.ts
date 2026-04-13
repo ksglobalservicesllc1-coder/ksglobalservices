@@ -13,6 +13,8 @@ export interface IBooking extends Document {
   zoomStartUrl?: string;
   stripeSessionId?: string;
   expiresAt: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const BookingSchema = new Schema<IBooking>(
@@ -39,6 +41,15 @@ const BookingSchema = new Schema<IBooking>(
     expiresAt: { type: Date, required: true },
   },
   { timestamps: true },
+);
+
+// expire after 5 minutes
+BookingSchema.index(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 300,
+    partialFilterExpression: { status: "pending" },
+  },
 );
 
 export const Booking =
