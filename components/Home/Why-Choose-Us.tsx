@@ -66,10 +66,15 @@ export default function WhyChooseUs() {
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm transition-all duration-500 cubic-bezier-[0.4,0,0.2,1] hover:-translate-y-1 hover:shadow-md hover:border-blue-200/60"
+              /* ADDED: active:scale-95 active:shadow-inner for mobile feedback.
+                 Tailwind hover: handles desktop. 
+              */
+              className="group cursor-pointer rounded-xl border border-gray-200 bg-white p-8 text-center shadow-sm transition-all duration-300 ease-in-out 
+                         hover:-translate-y-1 hover:shadow-md hover:border-blue-200/60 
+                         active:scale-95 active:bg-gray-50"
             >
               <div
-                className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg shadow-lg transition-all duration-500 ease-out group-hover:scale-105"
+                className="mx-auto flex h-14 w-14 items-center justify-center rounded-lg shadow-lg transition-all duration-500 ease-out group-hover:scale-105 group-active:scale-90"
                 style={{
                   backgroundImage:
                     "linear-gradient(135deg, #2563eb 0%, #1e40af 100%)",

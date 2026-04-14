@@ -8,8 +8,8 @@ import {
   UserCheck,
   ArrowRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation"; // Added import
-import { createSlug } from "@/lib/slug"; // Added import
+import { useRouter } from "next/navigation";
+import { createSlug } from "@/lib/slug";
 
 const services = [
   {
@@ -18,7 +18,7 @@ const services = [
       "Expert guidance through complex residency and citizenship filing processes with precision.",
     icon: <Users className="w-6 h-6 text-white" />,
     featured: true,
-    url: `/admins/${createSlug("Immigration USCIS Support")}`, // Added URL
+    url: `/admins/${createSlug("Immigration USCIS Support")}`,
   },
   {
     title: "Tax & Financial Services",
@@ -26,40 +26,40 @@ const services = [
       "Comprehensive tax preparation and strategic planning for individuals and businesses.",
     icon: <Receipt className="w-6 h-6 text-white" />,
     featured: true,
-    url: `/admins/${createSlug("Tax Financial Services")}`, // Added URL
+    url: `/admins/${createSlug("Tax Financial Services")}`,
   },
   {
     title: "Notary & Document Services",
     description:
       "Official verification and legal authentication for your critical documents.",
     icon: <FileSignature className="w-6 h-6 text-white" />,
-    url: `/admins/${createSlug("Notary Document Services")}`, // Added URL
+    url: `/admins/${createSlug("Notary Document Services")}`,
   },
   {
     title: "Business & Administrative Services",
     description:
       "Streamlined operational support to help your business scale efficiently.",
     icon: <Briefcase className="w-6 h-6 text-white" />,
-    url: `/admins/${createSlug("Business Administrative Services")}`, // Added URL
+    url: `/admins/${createSlug("Business Administrative Services")}`,
   },
   {
     title: "Translation & Language Services",
     description:
       "Certified multilingual translations for legal, medical, and personal records.",
     icon: <Languages className="w-6 h-6 text-white" />,
-    url: `/admins/${createSlug("Translation Language Services")}`, // Added URL
+    url: `/admins/${createSlug("Translation Language Services")}`,
   },
   {
     title: "Professional Consultations",
     description:
       "One-on-one sessions with specialists to map out your specific goals.",
     icon: <UserCheck className="w-6 h-6 text-white" />,
-    url: `/admins/${createSlug("Other Services")}`, // Updated to match navbar logic
+    url: `/admins/${createSlug("Other Services")}`,
   },
 ];
 
 export default function ProfessionalServices() {
-  const router = useRouter(); // Initialize router
+  const router = useRouter();
 
   return (
     <section className="bg-blue-50 px-6 py-20 md:py-32 overflow-hidden">
@@ -79,20 +79,25 @@ export default function ProfessionalServices() {
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 touch-manipulation">
           {services.map((service, index) => (
             <div
               key={index}
+              onClick={() => router.push(service.url)} // Make entire card clickable for better UX
               style={{ animationDelay: `${index * 100}ms` }}
               className={cn(
-                "group relative flex flex-col justify-between p-10 rounded-[2rem] border border-gray-100 bg-white transition-all duration-500 ease-out hover:bg-white hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 animate-in fade-in slide-in-from-bottom-8 fill-mode-both",
+                "group relative flex flex-col justify-between p-10 rounded-[2rem] border border-gray-100 bg-white transition-all duration-500 ease-out animate-in fade-in slide-in-from-bottom-8 fill-mode-both cursor-pointer",
+                /* Hover Effects (Desktop) */
+                "hover:bg-white hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2",
+                /* Active Effects (Mobile Touch) */
+                "active:scale-[0.97] active:bg-gray-50/50",
                 service.featured ? "md:col-span-1 lg:border-blue-50" : "",
               )}
             >
               <div>
-                {/* Icon */}
+                {/* Icon Container with Group Hover/Active scale */}
                 <div
-                  className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-blue-200/50 shadow-lg mb-8 transition-all duration-500 group-hover:rotate-[10deg] group-hover:scale-110"
+                  className="flex h-14 w-14 items-center justify-center rounded-2xl shadow-blue-200/50 shadow-lg mb-8 transition-all duration-500 group-hover:rotate-[10deg] group-hover:scale-110 group-active:scale-90"
                   style={{
                     backgroundImage:
                       "linear-gradient(135deg, #2563eb 0%, #1e40af 100%)",
@@ -111,13 +116,10 @@ export default function ProfessionalServices() {
 
               {/* Footer */}
               <div className="mt-10 pt-6 border-t border-gray-100/50">
-                <button
-                  onClick={() => router.push(service.url)} // Navigation logic added here
-                  className="cursor-pointer flex items-center gap-3 text-sm font-bold text-blue-600 uppercase tracking-widest transition-all group-hover:gap-5"
-                >
+                <div className="flex items-center gap-3 text-sm font-bold text-blue-600 uppercase tracking-widest transition-all group-hover:gap-5">
                   Learn More
                   <ArrowRight className="w-5 h-5 transition-transform" />
-                </button>
+                </div>
               </div>
             </div>
           ))}
@@ -131,7 +133,6 @@ export default function ProfessionalServices() {
   );
 }
 
-// Helper
 function cn(...inputs: any[]) {
   return inputs.filter(Boolean).join(" ");
 }

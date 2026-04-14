@@ -129,7 +129,12 @@ export default function HeroSection() {
 
       {/* MARQUEE */}
       <div className="w-full">
-        <Marquee pauseOnHover className="[--duration:60s] py-2 md:py-4">
+        <Marquee
+          pauseOnHover
+          className="[--duration:60s] py-2 md:py-4"
+          // This ensures touch events trigger the hover/pause state on mobile
+          onTouchStart={() => {}}
+        >
           {admins.map((admin) => (
             <ReviewCard
               key={admin._id}
