@@ -143,7 +143,7 @@ export default function HeroSection() {
       >
         {isReady && (
           <Marquee
-            pauseOnHover={false}
+            pauseOnHover={true}
             className={cn(
               "[--duration:60s] py-2 md:py-4",
               isPaused && "animate-pause",
