@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, MouseEvent } from "react";
+import React, { useState, MouseEvent, TouchEvent } from "react";
 import { cn } from "@/lib/utils";
 import {
   CalendarClock,
@@ -41,8 +41,11 @@ const steps = [
 
 export default function HowItWorks() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isVisible, setIsVisible] = useState(false);
 
+  // Desktop Mouse Handler
   const handleMouseMove = (e: MouseEvent) => {
+    setIsVisible(true);
     const rect = e.currentTarget.getBoundingClientRect();
     setMousePos({
       x: e.clientX - rect.left,
@@ -50,22 +53,38 @@ export default function HowItWorks() {
     });
   };
 
+  // Mobile Touch Handler
+  const handleTouchMove = (e: TouchEvent) => {
+    setIsVisible(true);
+    const rect = e.currentTarget.getBoundingClientRect();
+    const touch = e.touches[0];
+    setMousePos({
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top,
+    });
+  };
+
   return (
     <section
       className="relative bg-gray-50 py-20 md:py-32 px-6 overflow-hidden"
       onMouseMove={handleMouseMove}
+      onTouchMove={handleTouchMove}
+      onMouseLeave={() => setIsVisible(false)}
+      // Optional: hide glow when touch ends
+      onTouchEnd={() => setIsVisible(false)}
     >
       {/* Dynamic Background Glow */}
       <div
-        className="pointer-events-none absolute transition-opacity duration-500 opacity-40 lg:opacity-60"
+        className="pointer-events-none absolute transition-opacity duration-500 z-0"
         style={{
           width: "600px",
           height: "600px",
+          // Fixed: Changed 'bg-blue-700' to a hex or rgb value for the CSS gradient
           background:
-            "radial-gradient(circle, bg-blue-700 0%, transparent 40%)",
+            "radial-gradient(circle, rgba(29, 78, 216, 0.15) 0%, transparent 70%)",
           left: `${mousePos.x - 300}px`,
           top: `${mousePos.y - 300}px`,
-          zIndex: 0,
+          opacity: isVisible ? 1 : 0,
         }}
       />
 
@@ -82,13 +101,6 @@ export default function HowItWorks() {
             Simple steps to expert support. Follow our streamlined process to
             get started with your professional services today.
           </p>
-
-          <div className="mt-10 hidden lg:block overflow-hidden">
-            <div className="h-1 w-20 bg-blue-600 rounded-full mb-4 animate-pulse" />
-            <p className="text-sm font-bold text-gray-600 uppercase tracking-widest tracking-in-expand">
-              Efficiency Guaranteed
-            </p>
-          </div>
         </div>
 
         {/* Right Side: Animated Cards */}
@@ -99,6 +111,7 @@ export default function HowItWorks() {
               style={{ animationDelay: `${index * 150}ms` }}
               className={cn(
                 "group relative flex flex-col p-10 rounded-[2.5rem] border border-gray-100 bg-blue-100/60 backdrop-blur-sm transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)]",
+                // Note: 'hover:' effects trigger on "Tap" on mobile devices automatically
                 "hover:bg-white hover:shadow-2xl hover:shadow-blue-600/5 hover:-translate-y-3 animate-in fade-in slide-in-from-bottom-10 fill-mode-both",
               )}
             >
