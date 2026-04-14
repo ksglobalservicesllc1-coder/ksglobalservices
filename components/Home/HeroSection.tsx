@@ -7,7 +7,6 @@ import { Marquee } from "@/components/ui/marquee";
 import { Button } from "../ui/button";
 import { CalendarDays, FileText } from "lucide-react";
 import { getAdmins } from "@/app/actions/public/adminAction";
-import Link from "next/link";
 
 type Admin = {
   _id: string;
@@ -42,7 +41,10 @@ const ReviewCard = ({
         {/* IMAGE */}
         <div className="w-full overflow-hidden rounded-2xl aspect-[4/5]">
           <img
-            className="w-full h-screen object-cover transition duration-700 hover:scale-[1.02]"
+            className={cn(
+              "w-full h-screen object-cover transition duration-700",
+              "hover:scale-[1.02] active:scale-[1.02]",
+            )}
             alt={name}
             src={img}
           />
@@ -83,6 +85,9 @@ const ReviewCard = ({
 
 export default function HeroSection() {
   const [admins, setAdmins] = useState<Admin[]>([]);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -90,6 +95,7 @@ export default function HeroSection() {
       const res = await getAdmins();
       if (res.success) {
         setAdmins(res.data as Admin[]);
+        setIsReady(true);
       }
     }
     fetchAdmins();
@@ -121,31 +127,40 @@ export default function HeroSection() {
           for Your Case
         </h1>
 
-        <p className="mx-auto my-3 md:my-4 w-full max-w-xl bg-transparent text-center font-medium leading-relaxed tracking-wide text-gray-500 mb-8 md:mb-12 text-sm sm:text-base">
+        <p className="mx-auto my-3 md:my-4 w-full max-w-xl text-center font-medium leading-relaxed tracking-wide text-gray-500 mb-8 md:mb-12 text-sm sm:text-base">
           Select a dedicated specialist to navigate your journey. Book a private
           consultation or submit your details for a rapid, expert review.
         </p>
       </div>
 
       {/* MARQUEE */}
-      <div className="w-full">
-        <Marquee
-          pauseOnHover
-          className="[--duration:60s] py-2 md:py-4"
-          // This ensures touch events trigger the hover/pause state on mobile
-          onTouchStart={() => {}}
-        >
-          {admins.map((admin) => (
-            <ReviewCard
-              key={admin._id}
-              id={admin._id}
-              name={admin.name}
-              img={admin.image}
-              onSchedule={handleSchedule}
-              onForm={handleForm}
-            />
-          ))}
-        </Marquee>
+      <div
+        className="w-full"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setIsPaused(false)}
+      >
+        {isReady && (
+          <Marquee
+            pauseOnHover={false}
+            className={cn(
+              "[--duration:60s] py-2 md:py-4",
+              isPaused && "animate-pause",
+            )}
+          >
+            {admins.map((admin) => (
+              <ReviewCard
+                key={admin._id}
+                id={admin._id}
+                name={admin.name}
+                img={admin.image}
+                onSchedule={handleSchedule}
+                onForm={handleForm}
+              />
+            ))}
+          </Marquee>
+        )}
       </div>
     </div>
   );

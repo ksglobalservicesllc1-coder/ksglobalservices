@@ -189,7 +189,6 @@ const Navbar = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeValue, setActiveValue] = useState<string | undefined>(undefined);
-  const [activeAccordion, setActiveAccordion] = useState<string | undefined>();
 
   // Handle scroll for sticky backdrop effect
   useEffect(() => {
@@ -219,13 +218,10 @@ const Navbar = ({
 
   useEffect(() => {
     const handleOpenForms = () => {
-      setActiveValue("Forms"); // desktop
-      setActiveAccordion("Forms"); // mobile
-      setIsOpen(true);
+      setActiveValue("Forms");
     };
 
     window.addEventListener("openFormsMenu", handleOpenForms);
-
     return () => {
       window.removeEventListener("openFormsMenu", handleOpenForms);
     };
@@ -405,8 +401,6 @@ const Navbar = ({
                   <Accordion
                     type="single"
                     collapsible
-                    value={activeAccordion}
-                    onValueChange={setActiveAccordion}
                     className="flex w-full flex-col gap-4"
                   >
                     {menu.map((item) => renderMobileMenuItem(item, setIsOpen))}
