@@ -97,7 +97,14 @@ export default function Signup() {
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-50 px-2">
+    <div className="flex justify-center flex-col gap-4 items-center min-h-screen bg-gray-50 px-2">
+      <Button
+        className="mr-65 cursor-pointer"
+        variant="link"
+        onClick={() => router.push("/")}
+      >
+        Back to Home
+      </Button>
       <Card className="w-full max-w-sm shadow">
         <CardHeader className="text-center my-[-10px]">
           <CardTitle className="text-xl font-bold">
