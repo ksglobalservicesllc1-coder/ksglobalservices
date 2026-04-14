@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Marquee } from "@/components/ui/marquee";
@@ -38,7 +38,6 @@ const ReviewCard = ({
       <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 bg-gradient-to-b from-blue-50/20 to-transparent" />
 
       <div className="flex flex-col items-center gap-4 md:gap-5">
-        {/* IMAGE */}
         <div className="w-full overflow-hidden rounded-2xl aspect-[4/5]">
           <img
             className={cn(
@@ -50,7 +49,6 @@ const ReviewCard = ({
           />
         </div>
 
-        {/* CONTENT */}
         <div className="flex flex-col items-center gap-3 md:gap-4 w-full">
           <h3 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-gray-800 transition-colors group-hover:text-blue-700 text-center">
             {name}
@@ -88,6 +86,8 @@ export default function HeroSection() {
   const [isPaused, setIsPaused] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
+  const touchTimeout = useRef<NodeJS.Timeout | null>(null);
+
   const router = useRouter();
 
   useEffect(() => {
@@ -109,15 +109,28 @@ export default function HeroSection() {
     router.push(`formList/${id}`);
   };
 
+  const handleTouchStart = () => {
+    setIsPaused(true);
+
+    if (touchTimeout.current) {
+      clearTimeout(touchTimeout.current);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    // Delay resume so it feels natural
+    touchTimeout.current = setTimeout(() => {
+      setIsPaused(false);
+    }, 800);
+  };
+
   return (
     <div
       id="hero"
       className="relative flex w-full flex-col items-center justify-center overflow-hidden py-16 md:py-24 px-4 bg-white"
     >
-      {/* BACKGROUND */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[300px] md:h-[500px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-50/50 via-transparent to-transparent -z-10" />
 
-      {/* HEADER */}
       <div className="relative mx-auto max-w-5xl text-center">
         <h1 className="block w-full bg-gradient-to-b from-gray-900 to-gray-600 bg-clip-text font-bold text-transparent text-3xl sm:text-4xl md:text-6xl tracking-tight text-center mb-4 md:mb-6 leading-[1.1]">
           <span className="bg-gradient-to-b from-blue-900 to-blue-600 bg-clip-text text-transparent">
@@ -133,20 +146,19 @@ export default function HeroSection() {
         </p>
       </div>
 
-      {/* MARQUEE */}
       <div
         className="w-full"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
         {isReady && (
           <Marquee
-            pauseOnHover={true}
+            pauseOnHover={true} // we control it manually now
             className={cn(
               "[--duration:60s] py-2 md:py-4",
-              isPaused && "animate-pause",
+              isPaused && "[animation-play-state:paused]",
             )}
           >
             {admins.map((admin) => (
