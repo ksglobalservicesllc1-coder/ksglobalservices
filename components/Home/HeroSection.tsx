@@ -155,7 +155,7 @@ export default function HeroSection() {
       >
         {isReady && (
           <Marquee
-            pauseOnHover={true} // we control it manually now
+            pauseOnHover={true}
             className={cn(
               "[--duration:60s] py-2 md:py-4",
               isPaused && "[animation-play-state:paused]",
