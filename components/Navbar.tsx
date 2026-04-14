@@ -188,6 +188,8 @@ const Navbar = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [activeValue, setActiveValue] = useState<string | undefined>(undefined);
+  const [activeAccordion, setActiveAccordion] = useState<string | undefined>();
 
   // Handle scroll for sticky backdrop effect
   useEffect(() => {
@@ -213,6 +215,20 @@ const Navbar = ({
     };
 
     checkAuth();
+  }, []);
+
+  useEffect(() => {
+    const handleOpenForms = () => {
+      setActiveValue("Forms"); // desktop
+      setActiveAccordion("Forms"); // mobile
+      setIsOpen(true);
+    };
+
+    window.addEventListener("openFormsMenu", handleOpenForms);
+
+    return () => {
+      window.removeEventListener("openFormsMenu", handleOpenForms);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -308,7 +324,10 @@ const Navbar = ({
               </Link>
             </div>
             <div className="flex justify-center">
-              <NavigationMenu>
+              <NavigationMenu
+                value={activeValue}
+                onValueChange={setActiveValue}
+              >
                 <NavigationMenuList>
                   {menu.map((item) => renderMenuItem(item))}
                 </NavigationMenuList>
@@ -343,7 +362,7 @@ const Navbar = ({
           </div>
 
           <div className="flex justify-center">
-            <NavigationMenu>
+            <NavigationMenu value={activeValue} onValueChange={setActiveValue}>
               <NavigationMenuList>
                 {menu.map((item) => renderMenuItem(item))}
               </NavigationMenuList>
@@ -386,6 +405,8 @@ const Navbar = ({
                   <Accordion
                     type="single"
                     collapsible
+                    value={activeAccordion}
+                    onValueChange={setActiveAccordion}
                     className="flex w-full flex-col gap-4"
                   >
                     {menu.map((item) => renderMobileMenuItem(item, setIsOpen))}
@@ -474,7 +495,7 @@ const Navbar = ({
 const renderMenuItem = (item: MenuItem) => {
   if (item.items) {
     return (
-      <NavigationMenuItem key={item.title}>
+      <NavigationMenuItem key={item.title} value={item.title}>
         <NavigationMenuTrigger className="text-muted-foreground">
           {item.title}
         </NavigationMenuTrigger>

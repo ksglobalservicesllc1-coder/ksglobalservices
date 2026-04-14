@@ -7,6 +7,7 @@ import { Marquee } from "@/components/ui/marquee";
 import { Button } from "../ui/button";
 import { CalendarDays, FileText } from "lucide-react";
 import { getAdmins } from "@/app/actions/public/adminAction";
+import Link from "next/link";
 
 type Admin = {
   _id: string;
@@ -63,12 +64,15 @@ const ReviewCard = ({
             </Button>
 
             <Button
-              onClick={() => onForm(id)}
               variant="outline"
               className="cursor-pointer w-full border-gray-200 hover:bg-gray-50 hover:border-blue-400 hover:text-blue-600 rounded-xl py-4 md:py-6 transition-all duration-300 text-sm md:text-base"
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+                window.dispatchEvent(new Event("openFormsMenu"));
+              }}
             >
               <FileText className="mr-2 h-4 w-4" />
-              Fill out form
+              Fill out forms
             </Button>
           </div>
         </div>
