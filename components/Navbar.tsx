@@ -221,7 +221,7 @@ const Navbar = ({
 
   useEffect(() => {
     const handleOpenForms = () => {
-      const isMobile = window.innerWidth < 1024; // Tailwind 'lg' breakpoint
+      const isMobile = window.innerWidth < 1024;
 
       if (isMobile) {
         setIsOpen(true);
