@@ -111,17 +111,16 @@ export default function HeroSection() {
 
   const handleTouchStart = () => {
     setIsPaused(true);
-
     if (touchTimeout.current) {
       clearTimeout(touchTimeout.current);
     }
   };
 
   const handleTouchEnd = () => {
-    // Delay resume so it feels natural
+    // Delay resume so the user has time to read/interact
     touchTimeout.current = setTimeout(() => {
       setIsPaused(false);
-    }, 800);
+    }, 1200);
   };
 
   return (
@@ -155,9 +154,11 @@ export default function HeroSection() {
       >
         {isReady && (
           <Marquee
-            pauseOnHover={true}
+            // Dynamically control the pause state
+            pauseOnHover={isPaused}
             className={cn(
               "[--duration:60s] py-2 md:py-4",
+              // This ensures the CSS animation actually respects the state
               isPaused && "[animation-play-state:paused]",
             )}
           >
