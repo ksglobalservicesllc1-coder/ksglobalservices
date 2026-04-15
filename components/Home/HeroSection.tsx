@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Marquee } from "@/components/ui/marquee";
@@ -86,8 +86,6 @@ export default function HeroSection() {
   const [isPaused, setIsPaused] = useState(false);
   const [isReady, setIsReady] = useState(false);
 
-  const touchTimeout = useRef<NodeJS.Timeout | null>(null);
-
   const router = useRouter();
 
   useEffect(() => {
@@ -107,20 +105,6 @@ export default function HeroSection() {
 
   const handleForm = (id: string) => {
     router.push(`formList/${id}`);
-  };
-
-  const handleTouchStart = () => {
-    setIsPaused(true);
-    if (touchTimeout.current) {
-      clearTimeout(touchTimeout.current);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    // Delay resume so the user has time to read/interact
-    touchTimeout.current = setTimeout(() => {
-      setIsPaused(false);
-    }, 1200);
   };
 
   return (
@@ -149,16 +133,12 @@ export default function HeroSection() {
         className="w-full"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
       >
         {isReady && (
           <Marquee
-            // Dynamically control the pause state
-            pauseOnHover={isPaused}
+            pauseOnHover={true}
             className={cn(
               "[--duration:60s] py-2 md:py-4",
-              // This ensures the CSS animation actually respects the state
               isPaused && "[animation-play-state:paused]",
             )}
           >
