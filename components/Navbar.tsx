@@ -16,7 +16,6 @@ import {
   Scale,
   Building2,
   Globe,
-  MoreHorizontal,
   LogIn,
   UserPlus,
 } from "lucide-react";
@@ -188,9 +187,14 @@ const Navbar = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeValue, setActiveValue] = useState<string | undefined>(undefined);
 
-  // Handle scroll for sticky backdrop effect
+  // Desktop Menu State
+  const [activeValue, setActiveValue] = useState<string | undefined>(undefined);
+  // Mobile Accordion State
+  const [mobileAccordionValue, setMobileAccordionValue] = useState<
+    string | undefined
+  >(undefined);
+
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
@@ -212,13 +216,19 @@ const Navbar = ({
         setIsLoading(false);
       }
     };
-
     checkAuth();
   }, []);
 
   useEffect(() => {
     const handleOpenForms = () => {
-      setActiveValue("Forms");
+      const isMobile = window.innerWidth < 1024; // Tailwind 'lg' breakpoint
+
+      if (isMobile) {
+        setIsOpen(true);
+        setMobileAccordionValue("Forms");
+      } else {
+        setActiveValue("Forms");
+      }
     };
 
     window.addEventListener("openFormsMenu", handleOpenForms);
@@ -401,6 +411,8 @@ const Navbar = ({
                   <Accordion
                     type="single"
                     collapsible
+                    value={mobileAccordionValue}
+                    onValueChange={setMobileAccordionValue}
                     className="flex w-full flex-col gap-4"
                   >
                     {menu.map((item) => renderMobileMenuItem(item, setIsOpen))}
@@ -574,14 +586,14 @@ const renderMobileMenuItem = (
   }
 
   return (
-    <a
+    <Link
       key={item.title}
       href={item.url}
       className="py-2 text-lg font-semibold border-b-0"
       onClick={() => setIsOpen(false)}
     >
       {item.title}
-    </a>
+    </Link>
   );
 };
 
