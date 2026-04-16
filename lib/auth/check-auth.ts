@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth/auth";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 // Check if the user is authenticated and if the user is a super admin
 export async function verifySuperAdmin() {
@@ -8,7 +9,7 @@ export async function verifySuperAdmin() {
   });
 
   if (!session || !session.user) {
-    throw new Error("Authentication required: Please log in to continue.");
+    redirect("/auth/sign-in");
   }
 
   if (session.user.role !== "super-admin") {
@@ -25,7 +26,7 @@ export async function verifyAdmin() {
   });
 
   if (!session || !session.user) {
-    throw new Error("Authentication required: Please log in to continue.");
+    redirect("/auth/sign-in");
   }
 
   if (session.user.role !== "admin" && session.user.role !== "super-admin") {
@@ -42,7 +43,7 @@ export async function verifyUser() {
   });
 
   if (!session || !session.user) {
-    throw new Error("Authentication required: Please log in to continue.");
+    redirect("/auth/sign-in");
   }
 
   return session.user;

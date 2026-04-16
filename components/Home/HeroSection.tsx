@@ -125,7 +125,7 @@ export default function HeroSection() {
 
         <p className="mx-auto my-3 md:my-4 w-full max-w-xl text-center font-medium leading-relaxed tracking-wide text-gray-500 mb-8 md:mb-12 text-sm sm:text-base">
           Select a dedicated specialist to navigate your journey. Book a private
-          consultation or submit your details for a rapid, expert review.
+          consultation or fill out a form for free for a rapid, expert review.
         </p>
       </div>
 

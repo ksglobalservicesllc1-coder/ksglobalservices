@@ -1,6 +1,7 @@
 import { getEventsByAdmin } from "@/app/actions/public/eventActions";
 import { Calendar, Clock, ArrowRight, Briefcase } from "lucide-react";
 import Link from "next/link";
+import { verifyUser } from "@/lib/auth/check-auth";
 
 interface AdminDetailsProps {
   params: {
@@ -9,6 +10,8 @@ interface AdminDetailsProps {
 }
 
 export default async function AdminDetails({ params }: AdminDetailsProps) {
+  const user = await verifyUser();
+
   const { adminId } = await params;
   const response = await getEventsByAdmin(adminId);
   const events = response.success ? response.data : [];
@@ -18,9 +21,6 @@ export default async function AdminDetails({ params }: AdminDetailsProps) {
       <section className="relative block px-6 py-10 md:py-20 md:px-10 border-t border-b border-gray-100 bg-gray-50/50">
         {/* Header Section */}
         <div className="relative mx-auto max-w-5xl text-center mb-16">
-          <span className="text-blue-600 my-3 flex items-center justify-center font-bold uppercase tracking-widest text-sm">
-            Available Services
-          </span>
           <h2 className="block w-full bg-linear-to-b from-gray-900 to-gray-600 bg-clip-text font-bold text-transparent text-3xl sm:text-5xl">
             PROFESSIONAL{" "}
             <span className="bg-linear-to-b from-blue-900 to-blue-600 bg-clip-text text-transparent">
