@@ -4,5 +4,4 @@ export const EVENTS_CATEGORIES = [
   "Notary & Document Services",
   "Business & Administrative Services",
   "Translation & Language Services",
-  "Other Services",
 ] as const;

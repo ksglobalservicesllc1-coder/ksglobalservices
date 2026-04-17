@@ -124,12 +124,6 @@ const Navbar = ({
           icon: <Languages className="size-5 shrink-0 text-blue-500" />,
           url: `/admins/${createSlug("Translation Language Services")}`,
         },
-        {
-          title: "Other Services",
-          description: "Schedule a meeting for custom service requests",
-          icon: <PlusCircle className="size-5 shrink-0 text-blue-500" />,
-          url: `/admins/${createSlug("Other Services")}`,
-        },
       ],
     },
     {
