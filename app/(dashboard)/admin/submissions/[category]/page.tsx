@@ -18,10 +18,9 @@ export default async function AdminFormPage({ params }: PageProps) {
   const { category } = await params;
   const formData = FORMS_MAP[category.toLowerCase()];
 
-  if (!formData) notFound();
+  if (!formData || !formData.jotformId) notFound();
 
   const submissions = await getFormSubmissions(formData.jotformId);
-
   return (
     <div className="p-6 space-y-6">
       <div>

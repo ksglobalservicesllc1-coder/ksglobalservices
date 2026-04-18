@@ -2,10 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { Marquee } from "@/components/ui/marquee";
 import { Button } from "../ui/button";
-import { CalendarDays, FileText } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { getAdmins } from "@/app/actions/public/adminAction";
 
 type Admin = {
@@ -14,78 +12,9 @@ type Admin = {
   image: string;
 };
 
-const ReviewCard = ({
-  id,
-  img,
-  name,
-  onSchedule,
-  onForm,
-}: {
-  id: string;
-  img: string;
-  name: string;
-  onSchedule: (id: string) => void;
-  onForm: (id: string) => void;
-}) => {
-  return (
-    <figure
-      className={cn(
-        "group relative h-full w-[85vw] sm:w-[260px] md:w-[400px] cursor-pointer overflow-hidden rounded-3xl border p-4 md:p-5 transition-all duration-500",
-        "border-gray-100 bg-white/80 backdrop-blur-sm shadow",
-        "hover:-translate-y-2 hover:shadow-md hover:shadow-blue-500/10 hover:border-blue-500/30 bg-gray-50",
-      )}
-    >
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 bg-gradient-to-b from-blue-50/20 to-transparent" />
-
-      <div className="flex flex-col items-center gap-4 md:gap-5">
-        <div className="w-full overflow-hidden rounded-2xl aspect-[4/5]">
-          <img
-            className={cn(
-              "w-full h-screen object-cover transition duration-700",
-              "hover:scale-[1.02] active:scale-[1.02]",
-            )}
-            alt={name}
-            src={img}
-          />
-        </div>
-
-        <div className="flex flex-col items-center gap-3 md:gap-4 w-full">
-          <h3 className="text-base sm:text-lg md:text-xl font-bold tracking-tight text-gray-800 transition-colors group-hover:text-blue-700 text-center">
-            {name}
-          </h3>
-
-          <div className="flex flex-col gap-2 md:gap-2.5 w-full">
-            <Button
-              onClick={() => onSchedule(id)}
-              className="cursor-pointer w-full bg-blue-900 hover:bg-blue-800 text-white transition-colors duration-300 rounded-xl py-4 md:py-6 text-sm md:text-base"
-            >
-              <CalendarDays className="mr-2 h-4 w-4" />
-              Schedule consultation
-            </Button>
-
-            <Button
-              variant="outline"
-              className="cursor-pointer w-full border-gray-200 hover:bg-gray-50 hover:border-blue-400 hover:text-blue-600 rounded-xl py-4 md:py-6 transition-all duration-300 text-sm md:text-base"
-              onClick={() => {
-                window.scrollTo({ top: 0, behavior: "smooth" });
-                window.dispatchEvent(new Event("openFormsMenu"));
-              }}
-            >
-              <FileText className="mr-2 h-4 w-4" />
-              Fill out forms
-            </Button>
-          </div>
-        </div>
-      </div>
-    </figure>
-  );
-};
-
 export default function HeroSection() {
   const [admins, setAdmins] = useState<Admin[]>([]);
-  const [isPaused, setIsPaused] = useState(false);
   const [isReady, setIsReady] = useState(false);
-
   const router = useRouter();
 
   useEffect(() => {
@@ -99,62 +28,86 @@ export default function HeroSection() {
     fetchAdmins();
   }, []);
 
-  const handleSchedule = (id: string) => {
-    router.push(`events/admin/${id}`);
-  };
+  const handleSchedule = (id: string) => router.push(`events/admin/${id}`);
 
-  const handleForm = (id: string) => {
-    router.push(`formList/${id}`);
-  };
+  if (!isReady || admins.length === 0) return null;
 
   return (
-    <div
+    <section
       id="hero"
-      className="relative flex w-full flex-col items-center justify-center overflow-hidden py-16 md:py-24 px-4 bg-white"
+      className="w-full py-20 md:py-32 lg:py-40 px-6 bg-gray-100 overflow-hidden"
     >
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[300px] md:h-[500px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-50/50 via-transparent to-transparent -z-10" />
+      <div className="max-w-7xl mx-auto">
+        <header className="mb-24 text-center space-y-6">
+          <span className="text-blue-600 font-semibold tracking-widest uppercase text-sm">
+            Our Professionals
+          </span>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
+            <span className="text-blue-700">Meet</span>{" "}
+            <span className="text-gray-500">the team.</span>
+          </h1>
+          <p className="text-slate-800 max-w-2xl mx-auto text-lg md:text-xl leading-relaxed">
+            Connect with our experts to schedule a consultation or fill out a
+            form for free from the menu.
+          </p>
+        </header>
 
-      <div className="relative mx-auto max-w-5xl text-center">
-        <h1 className="block w-full bg-gradient-to-b from-gray-900 to-gray-600 bg-clip-text font-bold text-transparent text-3xl sm:text-4xl md:text-6xl tracking-tight text-center mb-4 md:mb-6 leading-[1.1]">
-          <span className="bg-gradient-to-b from-blue-900 to-blue-600 bg-clip-text text-transparent">
-            Get Expert Support
-          </span>{" "}
-          <br className="hidden md:block" />
-          for Your Case
-        </h1>
+        {/* Infinite Slide Container */}
+        <div className="relative w-full overflow-hidden">
+          {/* The 'animate-infinite-scroll' class needs to be defined in your tailwind.config.js 
+            or via a <style> tag. I've added a style tag below for an out-of-the-box solution.
+          */}
+          <div className="flex w-fit gap-6 md:gap-4 animate-infinite-scroll">
+            {/* Render the list twice to create the infinite illusion */}
+            {[...admins, ...admins].map((admin, index) => (
+              <div
+                key={`${admin._id}-${index}`}
+                className="group flex flex-col items-center min-w-[300px] md:min-w-[400px] transition-all duration-300"
+              >
+                <div className="relative mb-8">
+                  <div className="w-48 h-48 md:w-64 md:h-64 rounded-full overflow-hidden border-4 border-white shadow-md transition-transform duration-300 group-hover:-translate-y-2">
+                    <img
+                      src={admin.image}
+                      alt={admin.name}
+                      className="w-full h-full object-cover object-top"
+                    />
+                  </div>
+                </div>
 
-        <p className="mx-auto my-3 md:my-4 w-full max-w-xl text-center font-medium leading-relaxed tracking-wide text-gray-500 mb-8 md:mb-12 text-sm sm:text-base">
-          Select a dedicated specialist to navigate your journey. Book a private
-          consultation or fill out a form for free for a rapid, expert review.
-        </p>
-      </div>
+                <h3 className="text-2xl md:text-3xl font-bold text-slate-800 mb-8 group-hover:text-blue-700 transition-colors">
+                  {admin.name}
+                </h3>
 
-      <div
-        className="w-full"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-      >
-        {isReady && (
-          <Marquee
-            pauseOnHover={true}
-            className={cn(
-              "[--duration:60s] py-2 md:py-4",
-              isPaused && "[animation-play-state:paused]",
-            )}
-          >
-            {admins.map((admin) => (
-              <ReviewCard
-                key={admin._id}
-                id={admin._id}
-                name={admin.name}
-                img={admin.image}
-                onSchedule={handleSchedule}
-                onForm={handleForm}
-              />
+                <Button
+                  onClick={() => handleSchedule(admin._id)}
+                  className="w-64 bg-blue-700 hover:bg-blue-800 cursor-pointer text-white uppercase text-xs rounded-full py-7 font-semibold transition-all hover:shadow-md active:scale-95 flex items-center justify-center gap-3"
+                >
+                  <CalendarDays className="h-5 w-5" />
+                  Schedule Consultation
+                </Button>
+              </div>
             ))}
-          </Marquee>
-        )}
+          </div>
+        </div>
       </div>
-    </div>
+
+      <style jsx global>{`
+        @keyframes infinite-scroll {
+          from {
+            transform: translateX(0);
+          }
+          to {
+            transform: translateX(-50%);
+          }
+        }
+        .animate-infinite-scroll {
+          animation: infinite-scroll 60s linear infinite;
+        }
+        /* This is the missing piece */
+        .animate-infinite-scroll:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+    </section>
   );
 }
