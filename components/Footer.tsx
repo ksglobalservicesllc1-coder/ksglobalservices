@@ -30,13 +30,15 @@ export const Footer = () => {
 
             <div className="flex items-center gap-4 mt-2">
               <Link
-                href="#"
+                target="_blank"
+                href="https://www.instagram.com/kingson_ksa?igsh=MWRocjUwdzBqeDA2dw%3D%3D&utm_source=qr"
                 className="text-gray-900 hover:text-blue-500 transition-colors"
               >
                 <FaInstagram className="size-5" />
               </Link>
               <Link
-                href="#"
+                target="_blank"
+                href="https://www.facebook.com/share/1B2bGGQBpW/?mibextid=wwXIfr"
                 className="text-gray-900 hover:text-blue-500 transition-colors"
               >
                 <FiFacebook className="size-5" />
