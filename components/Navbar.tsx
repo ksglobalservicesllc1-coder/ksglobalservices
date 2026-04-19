@@ -403,8 +403,8 @@ const Navbar = ({
       {/* Mobile Drawer */}
       <div
         className={cn(
-          "fixed inset-0 z- bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden",
-          isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible",
+          "fixed inset-y-0 right-0 z- w-full max-w-sm bg-white transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden",
+          isMobileMenuOpen ? "translate-x-0" : "translate-x-full",
         )}
         onClick={() => setIsMobileMenuOpen(false)}
       />
