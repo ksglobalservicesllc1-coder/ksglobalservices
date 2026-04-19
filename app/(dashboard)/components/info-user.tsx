@@ -65,7 +65,7 @@ export function InfoUser({ user }: NavUserProps) {
             >
               <Avatar className="h-8 w-8 rounded-lg">
                 <AvatarImage
-                  className="object-contain"
+                  className="object-cover object-top"
                   src={user.avatar}
                   alt={user.name}
                 />

@@ -114,7 +114,7 @@ export default function DisplayAdmin() {
                 <div className="flex items-center gap-4">
                   <Avatar className="h-10 w-10 border shadow-sm group-hover:scale-105 transition-transform">
                     <AvatarImage
-                      className="object-cover"
+                      className="object-cover object-top"
                       src={admin.image}
                       alt={admin.name}
                     />
