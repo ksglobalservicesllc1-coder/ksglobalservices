@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/auth-client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { createSlug } from "@/lib/slug";
@@ -188,11 +188,20 @@ const Navbar = ({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [openMobileMenus, setOpenMobileMenus] = useState<string[]>([]);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
 
   const toggleMobileMenu = (title: string) => {
     setOpenMobileMenus((prev) =>
       prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title],
     );
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+    // Reset open menus after drawer closes
+    setTimeout(() => {
+      setOpenMobileMenus([]);
+    }, 300);
   };
 
   useEffect(() => {
@@ -215,11 +224,23 @@ const Navbar = ({
     checkAuth();
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileMenuOpen]);
+
   const handleLogout = async () => {
     try {
       await authClient.signOut();
       setUser(null);
-      setIsMobileMenuOpen(false);
+      closeMobileMenu();
       router.push("/");
       router.refresh();
     } catch (error) {
@@ -231,7 +252,7 @@ const Navbar = ({
     if (!name) return "??";
     return name
       .split(" ")
-      .map((n) => n)
+      .map((n) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
@@ -276,7 +297,7 @@ const Navbar = ({
 
                   {item.items && (
                     /* Level 1 Dropdown Container */
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-">
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                       <div className="w-80 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-slate-100 p-2">
                         {item.items.map((subItem) => (
                           <div
@@ -307,7 +328,7 @@ const Navbar = ({
 
                             {/* Level 2 Sub-menu (Flyout) */}
                             {subItem.items && (
-                              <div className="absolute left-full top-0 pl-2 opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-200">
+                              <div className="absolute left-full top-0 pl-2 opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-200 z-50">
                                 <div className="w-72 bg-white rounded-xl shadow-[10px_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 p-2 max-h-[450px] overflow-y-auto custom-scrollbar">
                                   {subItem.items.map((deepItem) => (
                                     <Link
@@ -351,7 +372,7 @@ const Navbar = ({
                     )}
                   </div>
                 </button>
-                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-">
+                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
                   <div className="w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-1">
                     <button
                       onClick={() => router.push("/dashboard")}
@@ -388,11 +409,12 @@ const Navbar = ({
             )}
           </div>
 
-          {/* Mobile UI (Remains same as previous update) */}
-          <div className="lg:hidden flex items-center gap-4">
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden flex items-center justify-end">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
-              className="p-2 text-slate-600 bg-slate-100 rounded-lg"
+              className="p-2 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+              aria-label="Open menu"
             >
               <Menu className="size-6" />
             </button>
@@ -400,27 +422,41 @@ const Navbar = ({
         </nav>
       </div>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer Overlay */}
       <div
         className={cn(
-          "fixed inset-0 z-10 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 lg:hidden",
-          isMobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible",
+          "fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-all duration-300 lg:hidden z-[100]",
+          isMobileMenuOpen
+            ? "opacity-100 visible"
+            : "opacity-0 invisible pointer-events-none",
         )}
-        onClick={() => setIsMobileMenuOpen(false)}
+        onClick={closeMobileMenu}
       />
 
+      {/* Mobile Drawer */}
       <div
+        ref={mobileMenuRef}
         className={cn(
-          "fixed inset-y-0 right-0 z- w-full max-w-sm bg-white transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden",
+          "fixed inset-y-0 right-0 w-full max-w-sm bg-white transition-transform duration-300 ease-out lg:hidden z-[101]",
           isMobileMenuOpen ? "translate-x-0" : "translate-x-full",
         )}
       >
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-5 border-b">
-            <img src={logo.src} className="w-20" alt={logo.alt} />
+            <img
+              src={logo.src}
+              className="w-20"
+              alt={logo.alt}
+              onClick={() => {
+                router.push("/");
+                closeMobileMenu();
+              }}
+            />
+
             <button
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="p-2 text-slate-400 bg-slate-50 rounded-full"
+              onClick={closeMobileMenu}
+              className="p-2 text-slate-400 bg-slate-50 rounded-full hover:bg-slate-100 transition-colors"
+              aria-label="Close menu"
             >
               <X className="size-6" />
             </button>
@@ -500,9 +536,7 @@ const Navbar = ({
                                         <Link
                                           key={deep.title}
                                           href={deep.url}
-                                          onClick={() =>
-                                            setIsMobileMenuOpen(false)
-                                          }
+                                          onClick={closeMobileMenu}
                                           className="flex items-center gap-3 p-3 text-[12px] font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                         >
                                           <div className="size-1.5 rounded-full bg-blue-400" />
@@ -515,7 +549,7 @@ const Navbar = ({
                               ) : (
                                 <Link
                                   href={subItem.url}
-                                  onClick={() => setIsMobileMenuOpen(false)}
+                                  onClick={closeMobileMenu}
                                   className="flex items-center gap-4 p-4 rounded-xl hover:bg-blue-50 transition-all group"
                                 >
                                   <div className="p-2 bg-white rounded-lg shadow-sm group-hover:scale-110 transition-transform">
@@ -541,7 +575,7 @@ const Navbar = ({
                   ) : (
                     <Link
                       href={item.url}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={closeMobileMenu}
                       className="block p-3.5 text-lg font-bold text-slate-800 rounded-xl hover:bg-slate-50 transition-colors"
                     >
                       {item.title}
@@ -558,15 +592,15 @@ const Navbar = ({
                 <button
                   onClick={() => {
                     router.push("/dashboard");
-                    setIsMobileMenuOpen(false);
+                    closeMobileMenu();
                   }}
-                  className="flex items-center justify-center gap-2 w-full p-3.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 shadow-sm"
+                  className="flex items-center justify-center gap-2 w-full p-3.5 bg-white border border-slate-200 rounded-xl font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
                 >
                   <LayoutDashboard className="size-5 text-blue-500" /> Dashboard
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center justify-center gap-2 w-full p-3.5 bg-red-50 text-red-600 rounded-xl font-bold"
+                  className="flex items-center justify-center gap-2 w-full p-3.5 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors"
                 >
                   <LogOut className="size-5" /> Logout
                 </button>
@@ -575,15 +609,15 @@ const Navbar = ({
               <div className="flex flex-col gap-3">
                 <Link
                   href={auth.login.url}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center p-3.5 border border-slate-200 bg-white rounded-xl font-bold text-slate-700 shadow-sm"
+                  onClick={closeMobileMenu}
+                  className="flex items-center justify-center p-3.5 border border-slate-200 bg-white rounded-xl font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
                 >
                   Log in
                 </Link>
                 <Link
                   href={auth.signup.url}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center justify-center p-3.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200"
+                  onClick={closeMobileMenu}
+                  className="flex items-center justify-center p-3.5 bg-blue-600 text-white rounded-xl font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 transition-colors"
                 >
                   Sign up
                 </Link>
