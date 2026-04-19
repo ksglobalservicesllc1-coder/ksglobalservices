@@ -16,7 +16,7 @@ export default function BookFeature() {
 
               {/* Book Cover */}
               <div className="relative w-64 md:w-80 lg:w-[380px] aspect-[3/4] transition-transform duration-500 ease-out group-hover:scale-[1.01]">
-                <div className="w-full h-full bg-gray-100 rounded-r-lg rounded-l-sm overflow-hidden shadow-[10px_20px_50px_-15px_rgba(0,0,0,0.2)] border-l border-black/5">
+                <div className="w-full h-fit bg-gray-100 rounded-r-lg rounded-l-sm overflow-hidden shadow-[10px_20px_50px_-15px_rgba(0,0,0,0.2)] border-l border-black/5">
                   <img
                     src="/book-cover.jpg"
                     alt="Book Cover"
