@@ -233,6 +233,15 @@ const Navbar = ({
   const [mobileAccordionValue, setMobileAccordionValue] = useState<
     string | undefined
   >(undefined);
+  const [isSafari, setIsSafari] = useState(false);
+
+  useEffect(() => {
+    // Detect Safari browser
+    const isSafariBrowser = /^((?!chrome|android).)*safari/i.test(
+      navigator.userAgent,
+    );
+    setIsSafari(isSafariBrowser);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
@@ -270,14 +279,14 @@ const Navbar = ({
     if (!name) return "??";
     return name
       .split(" ")
-      .map((n) => n)
+      .map((n) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
   };
 
   const UserBadge = () => (
-    <HoverCard openDelay={200} closeDelay={100}>
+    <HoverCard openDelay={200} closeDelay={300}>
       <HoverCardTrigger asChild>
         <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
           <Avatar className="h-8 w-8 cursor-pointer rounded-lg">
@@ -292,7 +301,7 @@ const Navbar = ({
           </Avatar>
         </Button>
       </HoverCardTrigger>
-      <HoverCardContent className="w-56 p-2" align="end">
+      <HoverCardContent className="w-56 p-2 z-50" align="end" sideOffset={5}>
         <div className="flex flex-col gap-1">
           <Button
             variant="ghost"
@@ -319,9 +328,11 @@ const Navbar = ({
   return (
     <header
       className={cn(
-        "sticky top-0 z-50 w-full transition-all duration-300",
+        "sticky top-0 z-50 w-full transition-all duration-300 navbar-header",
         isScrolled
-          ? "border-b bg-background/80 backdrop-blur-md py-2"
+          ? isSafari
+            ? "border-b bg-background py-2"
+            : "border-b bg-background/80 backdrop-blur-md py-2"
           : "bg-transparent py-4",
       )}
     >
@@ -335,7 +346,7 @@ const Navbar = ({
           <div className="flex justify-center">
             <NavigationMenu value={activeValue} onValueChange={setActiveValue}>
               <NavigationMenuList>
-                {menu.map((item) => renderMenuItem(item))}
+                {menu.map((item) => renderMenuItem(item, isSafari))}
               </NavigationMenuList>
             </NavigationMenu>
           </div>
@@ -381,7 +392,7 @@ const Navbar = ({
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-full sm:max-w-none overflow-y-auto px-6"
+                className="w-full sm:max-w-none overflow-y-auto px-6 z-50"
               >
                 <SheetHeader>
                   <SheetTitle>
@@ -410,21 +421,20 @@ const Navbar = ({
   );
 };
 
-const renderMenuItem = (item: MenuItem) => {
+const renderMenuItem = (item: MenuItem, isSafari: boolean = false) => {
   if (item.items) {
     return (
       <NavigationMenuItem key={item.title} value={item.title}>
         <NavigationMenuTrigger className="text-muted-foreground">
           {item.title}
         </NavigationMenuTrigger>
-        <NavigationMenuContent>
+        <NavigationMenuContent className="z-50">
           <ul className="w-80 p-3 flex flex-col gap-1">
             {item.items.map((subItem) => (
               <li key={subItem.title}>
                 {subItem.items ? (
-                  <HoverCard openDelay={0} closeDelay={100}>
+                  <HoverCard openDelay={200} closeDelay={300}>
                     <HoverCardTrigger asChild>
-                      {/* Note: Clicking the parent category now links to the page */}
                       <Link
                         href={subItem.url || "#"}
                         className="flex items-center justify-between select-none gap-4 rounded-md p-3 transition-colors hover:bg-blue-100/60 cursor-pointer"
@@ -448,7 +458,11 @@ const renderMenuItem = (item: MenuItem) => {
                     <HoverCardContent
                       side="right"
                       align="start"
-                      className="w-80 p-2 ml-1 max-h-[450px] overflow-y-auto shadow-xl border-blue-50 bg-white/95 backdrop-blur-sm"
+                      className={cn(
+                        "w-80 p-2 ml-1 max-h-[450px] overflow-y-auto shadow-xl border-blue-50 z-50",
+                        !isSafari && "bg-white/95 backdrop-blur-sm",
+                      )}
+                      sideOffset={5}
                     >
                       <div className="grid gap-1">
                         {subItem.items.map((deepItem) => (
