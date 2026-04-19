@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/auth-client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { createSlug } from "@/lib/slug";
@@ -43,6 +43,185 @@ interface NavbarProps {
     signup: { text: string; url: string };
   };
 }
+
+// ─── Desktop Dropdown (click-toggle, touch-safe) ───────────────────────────
+
+function DesktopDropdown({ item }: { item: MenuItem }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLLIElement>(null);
+
+  // Close on outside click / touch
+  useEffect(() => {
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
+  }, []);
+
+  if (!item.items) {
+    return (
+      <li>
+        <Link
+          href={item.url}
+          className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 rounded-lg transition-colors hover:bg-blue-50/50"
+        >
+          {item.title}
+        </Link>
+      </li>
+    );
+  }
+
+  return (
+    <li ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "flex items-center gap-1 px-4 py-2 text-sm font-semibold rounded-lg transition-colors",
+          open
+            ? "text-blue-600 bg-blue-50"
+            : "text-slate-600 hover:text-blue-600 hover:bg-blue-50/50",
+        )}
+        aria-expanded={open}
+      >
+        {item.title}
+        <ChevronDown
+          className={cn(
+            "size-4 opacity-50 transition-transform duration-200",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+
+      {open && (
+        <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 z-50">
+          <div className="w-80 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-slate-100 p-2">
+            {item.items.map((subItem) => (
+              <DesktopSubItem
+                key={subItem.title}
+                subItem={subItem}
+                closeParent={() => setOpen(false)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </li>
+  );
+}
+
+// ─── Desktop Sub-Item with adaptive Level-2 flyout ─────────────────────────
+
+function DesktopSubItem({
+  subItem,
+  closeParent,
+}: {
+  subItem: MenuItem;
+  closeParent: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  // "right" or "left" — computed on open so we don't clip the viewport
+  const [flyoutSide, setFlyoutSide] = useState<"right" | "left">("right");
+
+  const handleToggle = useCallback(() => {
+    if (!open && ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      // If less than 300px to the right of the viewport, fly left instead
+      setFlyoutSide(window.innerWidth - rect.right < 300 ? "left" : "right");
+    }
+    setOpen((v) => !v);
+  }, [open]);
+
+  if (!subItem.items) {
+    return (
+      <Link
+        href={subItem.url}
+        onClick={closeParent}
+        className="flex items-center gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors"
+      >
+        {subItem.icon}
+        <div>
+          <div className="text-sm font-bold text-slate-800">
+            {subItem.title}
+          </div>
+          {subItem.description && (
+            <p className="text-[10px] text-slate-500 leading-tight">
+              {subItem.description}
+            </p>
+          )}
+        </div>
+      </Link>
+    );
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={handleToggle}
+        className={cn(
+          "flex items-center justify-between gap-3 w-full p-3 rounded-lg transition-colors text-left",
+          open ? "bg-blue-50" : "hover:bg-blue-50",
+        )}
+        aria-expanded={open}
+      >
+        <div className="flex items-center gap-3">
+          {subItem.icon}
+          <div>
+            <div className="text-sm font-bold text-slate-800">
+              {subItem.title}
+            </div>
+            {subItem.description && (
+              <p className="text-[10px] text-slate-500 leading-tight">
+                {subItem.description}
+              </p>
+            )}
+          </div>
+        </div>
+        <ChevronRight
+          className={cn(
+            "size-4 text-slate-400 transition-transform duration-200 shrink-0",
+            open && "rotate-90",
+          )}
+        />
+      </button>
+
+      {open && (
+        <div
+          className={cn(
+            "absolute top-0 pt-0 z-50",
+            flyoutSide === "right" ? "left-full pl-2" : "right-full pr-2",
+          )}
+        >
+          <div className="w-72 bg-white rounded-xl shadow-[10px_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 p-2 max-h-[450px] overflow-y-auto">
+            {subItem.items.map((deepItem) => (
+              <Link
+                key={deepItem.title}
+                href={deepItem.url}
+                onClick={() => {
+                  setOpen(false);
+                  closeParent();
+                }}
+                className="flex items-center gap-3 p-2.5 text-[11px] font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all border-l-2 border-transparent hover:border-blue-500"
+              >
+                <Info className="size-3 text-blue-400 shrink-0" />
+                {deepItem.title}
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Main Navbar ────────────────────────────────────────────────────────────
 
 const Navbar = ({
   logo = { url: "/", src: "/logo.png", alt: "logo" },
@@ -198,10 +377,7 @@ const Navbar = ({
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
-    // Reset open menus after drawer closes
-    setTimeout(() => {
-      setOpenMobileMenus([]);
-    }, 300);
+    setTimeout(() => setOpenMobileMenus([]), 300);
   };
 
   useEffect(() => {
@@ -224,13 +400,8 @@ const Navbar = ({
     checkAuth();
   }, []);
 
-  // Prevent body scroll when mobile menu is open
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
     return () => {
       document.body.style.overflow = "";
     };
@@ -261,6 +432,7 @@ const Navbar = ({
   return (
     <header
       className={cn(
+        // Changed lg: → xl: so iPads (768–1279px) always get the mobile drawer
         "sticky top-0 z-50 w-full transition-all duration-300",
         isScrolled
           ? "border-b bg-white/95 backdrop-blur-md py-2 shadow-sm"
@@ -268,7 +440,8 @@ const Navbar = ({
       )}
     >
       <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <nav className="flex items-center justify-between lg:grid lg:grid-cols-3">
+        {/* ── Changed lg: → xl: throughout the desktop nav ── */}
+        <nav className="flex items-center justify-between xl:grid xl:grid-cols-3">
           {/* Logo */}
           <div className="flex items-center">
             <Link href={logo.url} className="flex items-center gap-2">
@@ -280,117 +453,26 @@ const Navbar = ({
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex justify-center">
+          {/* Desktop Navigation — xl+ only, click-toggle, touch-safe */}
+          <div className="hidden xl:flex justify-center">
             <ul className="flex items-center gap-1">
               {menu.map((item) => (
-                <li key={item.title} className="relative group">
-                  <Link
-                    href={item.url}
-                    className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-slate-600 hover:text-blue-600 rounded-lg transition-colors group-hover:bg-blue-50/50"
-                  >
-                    {item.title}
-                    {item.items && (
-                      <ChevronDown className="size-4 opacity-50 group-hover:rotate-180 transition-transform" />
-                    )}
-                  </Link>
-
-                  {item.items && (
-                    /* Level 1 Dropdown Container */
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                      <div className="w-80 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.08)] border border-slate-100 p-2">
-                        {item.items.map((subItem) => (
-                          <div
-                            key={subItem.title}
-                            className="relative group/sub"
-                          >
-                            <Link
-                              href={subItem.url}
-                              className="flex items-center justify-between gap-3 p-3 rounded-lg hover:bg-blue-50 transition-colors"
-                            >
-                              <div className="flex items-center gap-3">
-                                {subItem.icon}
-                                <div>
-                                  <div className="text-sm font-bold text-slate-800">
-                                    {subItem.title}
-                                  </div>
-                                  {subItem.description && (
-                                    <p className="text-[10px] text-slate-500 leading-tight">
-                                      {subItem.description}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                              {subItem.items && (
-                                <ChevronRight className="size-4 text-slate-400 group-hover/sub:translate-x-1 transition-transform" />
-                              )}
-                            </Link>
-
-                            {/* Level 2 Sub-menu (Flyout) */}
-                            {subItem.items && (
-                              <div className="absolute left-full top-0 pl-2 opacity-0 invisible group-hover/sub:opacity-100 group-hover/sub:visible transition-all duration-200 z-50">
-                                <div className="w-72 bg-white rounded-xl shadow-[10px_10px_40px_rgba(0,0,0,0.12)] border border-slate-100 p-2 max-h-[450px] overflow-y-auto custom-scrollbar">
-                                  {subItem.items.map((deepItem) => (
-                                    <Link
-                                      key={deepItem.title}
-                                      href={deepItem.url}
-                                      className="flex items-center gap-3 p-2.5 text-[11px] font-bold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-all border-l-2 border-transparent hover:border-blue-500"
-                                    >
-                                      <Info className="size-3 text-blue-400 shrink-0" />
-                                      {deepItem.title}
-                                    </Link>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </li>
+                <DesktopDropdown key={item.title} item={item} />
               ))}
             </ul>
           </div>
 
-          {/* User Auth Section */}
-          <div className="hidden lg:flex justify-end items-center gap-3">
+          {/* User Auth — xl+ only */}
+          <div className="hidden xl:flex justify-end items-center gap-3">
             {isLoading ? (
               <div className="h-9 w-20 bg-slate-100 animate-pulse rounded-lg" />
             ) : user ? (
-              <div className="relative group">
-                <button className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100 transition-colors">
-                  <div className="h-9 w-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden">
-                    {user?.image ? (
-                      <img
-                        src={user.image}
-                        alt="Avatar"
-                        className="h-full w-full object-cover object-top"
-                      />
-                    ) : (
-                      getInitials(user?.name || user?.email)
-                    )}
-                  </div>
-                </button>
-                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
-                  <div className="w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-1">
-                    <button
-                      onClick={() => router.push("/dashboard")}
-                      className="flex items-center gap-2 w-full cursor-pointer p-2.5 text-sm font-semibold text-slate-700 hover:bg-blue-50 rounded-lg transition-colors"
-                    >
-                      <LayoutDashboard className="size-4 text-blue-500" />{" "}
-                      Dashboard
-                    </button>
-                    <hr className="my-1 border-slate-100" />
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-2 w-full cursor-pointer p-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <LogOut className="size-4" /> Logout
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <UserMenu
+                user={user}
+                getInitials={getInitials}
+                router={router}
+                handleLogout={handleLogout}
+              />
             ) : (
               <div className="flex items-center gap-2">
                 <Link
@@ -409,8 +491,8 @@ const Navbar = ({
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <div className="lg:hidden flex items-center justify-end">
+          {/* Mobile Menu Button — visible below xl */}
+          <div className="xl:hidden flex items-center justify-end">
             <button
               onClick={() => setIsMobileMenuOpen(true)}
               className="p-2 text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
@@ -425,7 +507,7 @@ const Navbar = ({
       {/* Mobile Drawer Overlay */}
       <div
         className={cn(
-          "fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-all duration-300 lg:hidden z-[100]",
+          "fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-all duration-300 xl:hidden z-[100]",
           isMobileMenuOpen
             ? "opacity-100 visible"
             : "opacity-0 invisible pointer-events-none",
@@ -437,7 +519,7 @@ const Navbar = ({
       <div
         ref={mobileMenuRef}
         className={cn(
-          "fixed inset-y-0 right-0 w-full max-w-sm bg-white transition-transform duration-300 ease-out lg:hidden z-[101]",
+          "fixed inset-y-0 right-0 w-full max-w-sm bg-white transition-transform duration-300 ease-out xl:hidden z-[101]",
           isMobileMenuOpen ? "translate-x-0" : "translate-x-full",
         )}
       >
@@ -452,7 +534,6 @@ const Navbar = ({
                 closeMobileMenu();
               }}
             />
-
             <button
               onClick={closeMobileMenu}
               className="p-2 text-slate-400 bg-slate-50 rounded-full hover:bg-slate-100 transition-colors"
@@ -629,5 +710,83 @@ const Navbar = ({
     </header>
   );
 };
+
+// ─── Desktop User Menu ──────────────────────────────────────────────────────
+
+function UserMenu({
+  user,
+  getInitials,
+  router,
+  handleLogout,
+}: {
+  user: any;
+  getInitials: (name: string) => string;
+  router: ReturnType<typeof useRouter>;
+  handleLogout: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node))
+        setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
+  }, []);
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-2 p-1 rounded-full hover:bg-slate-100 transition-colors"
+        aria-expanded={open}
+      >
+        <div className="h-9 w-9 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 font-bold text-sm overflow-hidden">
+          {user?.image ? (
+            <img
+              src={user.image}
+              alt="Avatar"
+              className="h-full w-full object-cover object-top"
+            />
+          ) : (
+            getInitials(user?.name || user?.email)
+          )}
+        </div>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full pt-2 z-50">
+          <div className="w-48 bg-white rounded-xl shadow-xl border border-slate-100 p-1">
+            <button
+              onClick={() => {
+                router.push("/dashboard");
+                setOpen(false);
+              }}
+              className="flex items-center gap-2 w-full cursor-pointer p-2.5 text-sm font-semibold text-slate-700 hover:bg-blue-50 rounded-lg transition-colors"
+            >
+              <LayoutDashboard className="size-4 text-blue-500" /> Dashboard
+            </button>
+            <hr className="my-1 border-slate-100" />
+            <button
+              onClick={() => {
+                handleLogout();
+                setOpen(false);
+              }}
+              className="flex items-center gap-2 w-full cursor-pointer p-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            >
+              <LogOut className="size-4" /> Logout
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export { Navbar };
