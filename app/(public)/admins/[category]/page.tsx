@@ -9,7 +9,7 @@ import { EVENTS_CATEGORIES } from "@/lib/constants/event-categories";
 import { slugToCategory } from "@/lib/slug";
 import { useEffect, useState } from "react";
 
-// Using the same ReviewCard style from your Hero section
+// Updated Card to match Hero Section Style (Circular)
 const SpecialistCard = ({
   id,
   img,
@@ -22,41 +22,32 @@ const SpecialistCard = ({
   onSchedule: (id: string) => void;
 }) => {
   return (
-    <figure
-      className={cn(
-        "group relative h-full w-full max-w-[400px] cursor-pointer overflow-hidden rounded-3xl border p-4 md:p-5 transition-all duration-500",
-        "border-gray-100 bg-white/80 backdrop-blur-sm shadow",
-        "hover:-translate-y-2 hover:shadow-md hover:shadow-blue-500/10 hover:border-blue-500/30 bg-gray-50",
-      )}
-    >
-      <div className="pointer-events-none absolute inset-0 opacity-0 transition duration-500 bg-gradient-to-b from-blue-50/20 to-transparent" />
-
-      <div className="flex flex-col items-center gap-4 md:gap-5">
-        <div className="w-full overflow-hidden rounded-2xl aspect-[4/5]">
+    <div className="group flex flex-col items-center w-full transition-all duration-300">
+      {/* Circular Image Container */}
+      <div className="relative mb-6 md:mb-8">
+        <div className="w-48 h-48 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-full overflow-hidden border-4 border-white shadow-lg transition-transform duration-300 group-hover:-translate-y-2">
           <img
-            className="h-screen w-full object-cover transition duration-700 hover:scale-102"
+            src={img || "/api/placeholder/400/400"}
             alt={name}
-            src={img}
+            className="w-full h-full object-cover object-top"
           />
         </div>
-
-        <div className="flex flex-col items-center gap-3 md:gap-4 w-full">
-          <h3 className="text-lg md:text-xl font-bold tracking-tight text-gray-800 transition-colors group-hover:text-blue-700">
-            {name}
-          </h3>
-
-          <div className="flex flex-col gap-2 md:gap-2.5 w-full">
-            <Button
-              onClick={() => onSchedule(id)}
-              className="cursor-pointer w-full bg-blue-900 hover:bg-blue-800 text-white transition-colors duration-300 rounded-xl py-5 md:py-6"
-            >
-              <CalendarDays className="mr-2 h-4 w-4" />
-              Schedule consultation
-            </Button>
-          </div>
-        </div>
       </div>
-    </figure>
+
+      {/* Name */}
+      <h3 className="text-xl md:text-2xl lg:text-3xl font-bold text-slate-800 mb-6 md:mb-8 group-hover:text-blue-700 transition-colors text-center">
+        {name}
+      </h3>
+
+      {/* Button */}
+      <Button
+        onClick={() => onSchedule(id)}
+        className="w-full max-w-[260px] bg-blue-700 hover:bg-blue-800 cursor-pointer text-white uppercase text-[10px] md:text-xs rounded-full py-6 md:py-7 font-semibold transition-all hover:shadow-md active:scale-95 flex items-center justify-center gap-3"
+      >
+        <CalendarDays className="h-4 w-4 md:h-5 md:w-5" />
+        Schedule Consultation
+      </Button>
+    </div>
   );
 };
 
@@ -101,35 +92,39 @@ export default function AdminListPage({
   }
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden py-12 md:py-20 px-4 bg-white">
-      {/* Background radial glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-blue-50/50 via-transparent to-transparent -z-10" />
-
+    <div className="relative min-h-screen w-full py-16 md:py-24 lg:py-32 px-6 bg-gray-100">
       <div className="mx-auto max-w-7xl">
-        <div className="text-center mb-10 md:mb-16">
-          <h1 className="bg-gradient-to-b from-blue-900 to-blue-600 bg-clip-text text-transparent text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4">
-            Available Specialists
+        {/* Header Section matching Hero Style */}
+        <header className="mb-16 md:mb-24 text-center space-y-4 md:space-y-6">
+          <span className="text-blue-600 font-semibold tracking-widest uppercase text-sm">
+            Our Professionals
+          </span>
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight">
+            <span className="text-blue-700">Meet</span>{" "}
+            <span className="text-gray-500">the specialists.</span>
           </h1>
-          <p className="text-gray-500 font-medium text-base md:text-lg">
-            Service: <span className="text-blue-700">{category}</span>
+          <p className="text-slate-800 max-w-2xl mx-auto text-lg md:text-xl leading-relaxed">
+            Service Category:{" "}
+            <span className="font-bold text-blue-700">{category}</span>
           </p>
-        </div>
+        </header>
 
         {admins.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 justify-items-center">
+          /* Responsive Grid: 1 col on mobile, 2 on tablet, 3 on desktop */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-16 gap-x-8 md:gap-y-24 justify-items-center">
             {admins.map((admin) => (
               <SpecialistCard
                 key={admin._id.toString()}
                 id={admin._id.toString()}
                 name={admin.name}
-                img={admin.image || "/api/placeholder/400/500"}
+                img={admin.image}
                 onSchedule={handleSchedule}
               />
             ))}
           </div>
         ) : (
-          <div className="max-w-md mx-auto p-12 border-2 border-dashed border-gray-200 rounded-3xl text-center text-gray-400 bg-gray-50/50">
-            <p className="text-lg">
+          <div className="max-w-md mx-auto p-12 border-2 border-dashed border-gray-300 rounded-3xl text-center text-gray-400">
+            <p className="text-lg italic">
               No specialists found for this service category.
             </p>
           </div>
