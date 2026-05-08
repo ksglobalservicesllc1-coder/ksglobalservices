@@ -19,6 +19,8 @@ import {
   ChevronDown,
   Info,
   X,
+  ShieldPlus,
+  BriefcaseBusiness,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/auth-client";
@@ -350,6 +352,12 @@ const Navbar = ({
           description: "Submit documents for certified translation services",
           icon: <Globe className="size-5 shrink-0 text-blue-500" />,
           url: `/forms/${createSlug("Translation Language Services")}`,
+        },
+        {
+          title: "Business Formation Intake Form LLC",
+          description: "Submit documents for LLC business",
+          icon: <BriefcaseBusiness className="size-5 shrink-0 text-blue-500" />,
+          url: `/forms/${createSlug("Business Formation Intake Form LLC")}`,
         },
       ],
     },
