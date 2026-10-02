@@ -74,7 +74,7 @@ export default function HeroSection() {
                   </div>
                 </div>
 
-                <h3 className="text-2xl md:text-3xl font-bold text-slate-800 mb-8 group-hover:text-blue-700 transition-colors">
+                <h3 className="text-2xl md:text-3xl text-center font-bold text-slate-800 mb-8 group-hover:text-blue-700 transition-colors">
                   {admin.name}
                 </h3>
 
@@ -97,7 +97,7 @@ export default function HeroSection() {
             transform: translateX(0);
           }
           to {
-            transform: translateX(-50%);
+            transform: translateX(-30%);
           }
         }
         .animate-infinite-scroll {
