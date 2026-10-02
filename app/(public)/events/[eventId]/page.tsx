@@ -76,7 +76,7 @@ export default function EventDetails({ params }: Props) {
       try {
         setLoading(true);
         const res = await getEventById(eventId);
-        if (!res.success) return setError("Event not found");
+        if (!res.success) return setError(res.error || "Event not found");
         setEvent(res.data);
 
         const dates = await getAvailableDates(

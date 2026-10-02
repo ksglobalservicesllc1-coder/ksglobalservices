@@ -29,7 +29,7 @@ export async function createBookingCheckout({
   const event = await Event.findById(eventId);
   if (!event) throw new Error("Event not found");
 
-  // ✅ CREATE BOOKING WITHOUT ZOOM
+  // CREATE BOOKING WITHOUT ZOOM
   const booking = await Booking.create({
     eventId: new mongoose.Types.ObjectId(eventId),
     adminId: new mongoose.Types.ObjectId(adminId),
@@ -39,7 +39,7 @@ export async function createBookingCheckout({
     consultationType,
     phoneNumber: consultationType === "phone" ? phoneNumber : undefined,
 
-    status: "pending", // IMPORTANT
+    status: "pending",
     paymentStatus: "unpaid",
 
     expiresAt: new Date(Date.now() + 15 * 60 * 1000),

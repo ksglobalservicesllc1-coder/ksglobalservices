@@ -1,7 +1,6 @@
 "use client";
 
-import React from "react";
-import { ShoppingCart, ArrowRight, Star } from "lucide-react";
+import { ShoppingCart, Star } from "lucide-react";
 
 export default function BookFeature() {
   return (

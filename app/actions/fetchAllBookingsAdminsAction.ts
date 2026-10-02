@@ -2,6 +2,7 @@
 
 import connectDB from "@/lib/db";
 import { Booking } from "@/lib/models/Booking";
+import { Event } from "@/lib/models/Event";
 import { verifySuperAdmin } from "@/lib/auth/check-auth";
 import client from "@/lib/db-client";
 import { ObjectId } from "mongodb";
@@ -23,7 +24,11 @@ export default async function fetchAllBookingsAdminsAction(
 
     // 2. Fetch only the specific slice of bookings
     const bookings = await Booking.find({})
-      .populate("eventId", "name price duration")
+      .populate({
+        path: "eventId",
+        select: "name price duration",
+        model: Event,
+      })
       .sort({ createdAt: -1 })
       .skip(skip) // Skip previous pages
       .limit(limit) // Only grab 10
@@ -71,7 +76,11 @@ export default async function fetchAllBookingsAdminsAction(
       totalBookings,
     };
   } catch (error) {
-    console.error("DETAILED_ERROR:", (error as Error).message);
+    console.error(
+      "Error fetching all bookings:",
+      (error as Error)?.name,
+      (error as Error)?.message,
+    );
     throw new Error("Failed to fetch bookings");
   }
 }

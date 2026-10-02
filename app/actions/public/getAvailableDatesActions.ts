@@ -197,7 +197,11 @@ export async function getAvailableDates(
 
     return results;
   } catch (error) {
-    console.error("Error fetching available dates:", error);
+    console.error(
+      "Error fetching available dates:",
+      (error as Error)?.name,
+      (error as Error)?.message,
+    );
     return [];
   }
 }

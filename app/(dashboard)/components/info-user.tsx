@@ -31,6 +31,7 @@ type NavUserProps = {
 };
 
 export function InfoUser({ user }: NavUserProps) {
+  const router = useRouter();
   if (!user) return null;
 
   const { data: session, isPending } = authClient.useSession();
@@ -41,8 +42,6 @@ export function InfoUser({ user }: NavUserProps) {
     .map((n) => n[0])
     .join("")
     .toUpperCase();
-
-  const router = useRouter();
 
   const handleLogout = async () => {
     await authClient.signOut();

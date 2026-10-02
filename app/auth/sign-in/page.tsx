@@ -25,7 +25,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 import { Eye, EyeOff, Loader2, AlertCircle } from "lucide-react";
 
-export default function signin() {
+export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 

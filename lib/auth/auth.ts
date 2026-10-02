@@ -3,43 +3,20 @@ import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import client from "../db-client";
 import { verificationEmail } from "../email/Better-auth/verificationEmail";
 import { resetPasswordEmail } from "../email/Better-auth/resetPasswordEmail";
-import { admin } from "better-auth/plugins";
-import { createAccessControl } from "better-auth/plugins/access";
-
-const statement = {
-  user: ["create", "read", "update", "delete", "ban"],
-  admin: ["create", "read", "update", "delete"],
-} as const;
-
-const ac = createAccessControl(statement);
-
-// Define your specific roles
-const userRole = ac.newRole({
-  user: ["read", "update"],
-});
-
-const adminRole = ac.newRole({
-  user: ["create", "read", "update", "delete"],
-  // Notice admins don't have access to the 'admin' entity here
-});
-
-const superAdminRole = ac.newRole({
-  user: ["create", "read", "update", "delete", "ban"],
-  admin: ["create", "read", "update", "delete"],
-});
+import { admin as adminPlugin } from "better-auth/plugins";
+import { ac, userRole, adminRole, superAdminRole } from "./permission";
 
 export const auth = betterAuth({
   database: mongodbAdapter(client.db("auth_db")),
   plugins: [
-    admin({
-      ac: ac,
+    adminPlugin({
+      ac,
       roles: {
         user: userRole,
         admin: adminRole,
-        "super-admin": superAdminRole,
+        superAdmin: superAdminRole,
       },
       defaultRole: "user",
-      adminRoles: ["admin", "super-admin"],
     }),
   ],
 

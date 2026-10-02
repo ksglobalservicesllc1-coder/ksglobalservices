@@ -21,5 +21,8 @@ const TimezoneSchema = new Schema<ITimezone>(
   { timestamps: true }
 );
 
-export default mongoose.models.Timezone || 
+export const Timezone =
+  mongoose.models.Timezone ||
   mongoose.model<ITimezone>("Timezone", TimezoneSchema);
+
+export default Timezone;

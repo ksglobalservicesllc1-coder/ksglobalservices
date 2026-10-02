@@ -43,7 +43,11 @@ export default async function fetchAdminsByEventCategory(category: string) {
     // 5. Convert to plain objects for Next.js (POJOs)
     return JSON.parse(JSON.stringify(admins));
   } catch (error) {
-    console.error("Error fetching admins:", error);
+    console.error(
+      "Error fetching admins:",
+      (error as Error)?.name,
+      (error as Error)?.message,
+    );
     return [];
   }
 }

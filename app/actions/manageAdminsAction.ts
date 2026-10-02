@@ -8,7 +8,7 @@ import { verifySuperAdmin } from "@/lib/auth/check-auth";
  * Super Admin Action: Create a pre-verified Admin user
  */
 export async function createAdmin(formData: FormData) {
-  verifySuperAdmin();
+ await verifySuperAdmin();
 
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;

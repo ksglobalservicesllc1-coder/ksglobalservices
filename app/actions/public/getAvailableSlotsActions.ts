@@ -209,7 +209,11 @@ export async function getAvailableSlots(
 
     return availableSlots.slice(0, 50);
   } catch (error) {
-    console.error("Error fetching available slots:", error);
+    console.error(
+      "Error fetching available slots:",
+      (error as Error)?.name,
+      (error as Error)?.message,
+    );
     return [];
   }
 }

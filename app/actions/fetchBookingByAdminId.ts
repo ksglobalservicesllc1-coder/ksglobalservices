@@ -2,6 +2,7 @@
 
 import connectDB from "@/lib/db";
 import { Booking } from "@/lib/models/Booking";
+import { Event } from "@/lib/models/Event";
 import { verifyAdmin } from "@/lib/auth/check-auth";
 import { Types } from "mongoose";
 import client from "@/lib/db-client";
@@ -19,7 +20,11 @@ export async function fetchBookingByAdminIdAction(page = 1, limit = 6) {
       adminId: adminObjectId,
       startTime: { $gte: now },
     })
-      .populate("eventId", "name price")
+      .populate({
+        path: "eventId",
+        select: "name price",
+        model: Event,
+      })
       .sort({ startTime: 1 })
       .lean();
 
@@ -34,7 +39,11 @@ export async function fetchBookingByAdminIdAction(page = 1, limit = 6) {
       adminId: adminObjectId,
       startTime: { $lt: now },
     })
-      .populate("eventId", "name price")
+      .populate({
+        path: "eventId",
+        select: "name price",
+        model: Event,
+      })
       .sort({ startTime: -1 })
       .skip(skip)
       .limit(limit)
@@ -44,7 +53,7 @@ export async function fetchBookingByAdminIdAction(page = 1, limit = 6) {
     if (!allFetched.length)
       return { upcoming: [], past: [], totalPages: 0, totalPast: 0 };
 
-    // 3. Fetch user details (the clients) from auth_db
+    // Fetch user details (the clients) from auth_db
     const userIds = allFetched.map((b: any) => new ObjectId(b.userId));
     const db = client.db("auth_db");
     const users = await db
@@ -54,7 +63,7 @@ export async function fetchBookingByAdminIdAction(page = 1, limit = 6) {
 
     const usersMap = new Map(users.map((u) => [u._id.toString(), u]));
 
-    // 4. Mapping logic
+    // Mapping logic
     const mapBooking = (b: any) => {
       const userData = usersMap.get(b.userId.toString());
 
@@ -99,7 +108,11 @@ export async function fetchBookingByAdminIdAction(page = 1, limit = 6) {
       totalPast: totalPastBookings,
     };
   } catch (error) {
-    console.error("Error fetching admin bookings:", error);
+    console.error(
+      "Error fetching admin bookings:",
+      (error as Error)?.name,
+      (error as Error)?.message,
+    );
     throw new Error("Failed to fetch bookings");
   }
 }

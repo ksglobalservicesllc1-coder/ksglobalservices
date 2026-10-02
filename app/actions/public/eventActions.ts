@@ -41,7 +41,11 @@ export async function getEventsByAdmin(adminId: string) {
       data: sanitizedEvents,
     };
   } catch (error) {
-    console.error("Error fetching events:", error);
+    console.error(
+      "Error fetching events:",
+      (error as Error)?.name,
+      (error as Error)?.message,
+    );
     return {
       success: false,
       error: "Failed to fetch events",
@@ -105,7 +109,11 @@ export async function getEventById(eventId: string) {
       data: sanitizedEvent,
     };
   } catch (error) {
-    console.error("Error fetching event details:", error);
+    console.error(
+      "Error fetching event details:",
+      (error as Error)?.name,
+      (error as Error)?.message,
+    );
     return {
       success: false,
       error: "Failed to fetch event",

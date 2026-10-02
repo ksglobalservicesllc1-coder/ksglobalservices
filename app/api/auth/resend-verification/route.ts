@@ -3,7 +3,7 @@ import { auth } from "@/lib/auth/auth";
 
 export async function POST(request: Request) {
   try {
-    // 1️⃣ Parse the email from request body
+    // Parse the email from request body
     const body = await request.json();
     const { email } = body;
 
@@ -14,7 +14,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2️⃣ Call Better Auth to resend verification email
+    // Call Better Auth to resend verification email
     await auth.api.sendVerificationEmail({
       body: {
         email,
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       },
     });
 
-    // 3️⃣ Respond with success
+    // Respond with success
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Resend verification error:", error);

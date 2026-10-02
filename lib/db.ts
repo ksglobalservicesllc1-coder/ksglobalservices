@@ -1,4 +1,8 @@
 import mongoose from "mongoose";
+import "@/lib/models/Booking";
+import "@/lib/models/Event";
+import "@/lib/models/Schedule";
+import "@/lib/models/Timezone";
 
 if (!process.env.MONGODB_URL) {
   throw new Error('Invalid/Missing environment variable: "MONGODB_URL"');
@@ -13,11 +17,11 @@ interface MongooseCache {
 
 // Use a different name for the global variable
 declare global {
-  var _mongoose: MongooseCache | undefined;
+  var _mongoose: MongooseCache | undefined
 }
 
 // Initialize with a different name
-let cached: MongooseCache = global._mongoose ?? { conn: null, promise: null };
+const cached: MongooseCache = global._mongoose ?? { conn: null, promise: null };
 
 if (!global._mongoose) {
   global._mongoose = cached;
