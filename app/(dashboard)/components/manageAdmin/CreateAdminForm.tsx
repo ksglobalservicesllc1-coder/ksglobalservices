@@ -18,27 +18,38 @@ import { Input } from "@/components/ui/input";
 import { createAdmin } from "@/app/actions/manageAdminsAction";
 
 const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters."),
-  email: z.string().email("Invalid email address."),
+  name: z.string().min(2, "Name must be at least 2 characters.").toLowerCase(),
+  email: z.email("Invalid email address.").toLowerCase().trim(),
   password: z.string().min(8, "Password must be at least 8 characters."),
   image: z.string().optional(),
 });
 
-export default function CreateAdminForm() {
+type Props = { onSuccess?: () => void };
+
+export default function CreateAdminForm({ onSuccess }: Props) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: { name: "", email: "", password: "", image: "" },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    form.clearErrors("root");
+    
     const formData = new FormData();
     formData.append("name", values.name);
     formData.append("email", values.email);
     formData.append("password", values.password);
     if (values.image) formData.append("image", values.image);
 
-    await createAdmin(formData);
-    form.reset();
+    const result = await createAdmin(formData);
+
+  if (!result.success) {
+    form.setError("root", { message: result.error });
+    return; 
+  }
+
+  form.reset();
+  onSuccess?.();
   }
 
   return (
@@ -155,11 +166,18 @@ export default function CreateAdminForm() {
           </div>
         </div>
 
+        {form.formState.errors.root && (
+            <p className="text-sm font-medium text-destructive text-center">
+            {form.formState.errors.root.message}
+            </p>
+        )}
+
         <Button
           type="submit"
+          disabled={form.formState.isSubmitting}
           className="w-full h-12 text-base font-bold shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
         >
-          Create Account
+          {form.formState.isSubmitting ? "Creating..." : "Create Account"}
         </Button>
       </form>
     </Form>

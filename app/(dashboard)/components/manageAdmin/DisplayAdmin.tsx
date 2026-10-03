@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Loader2, Trash2, Mail, Users } from "lucide-react";
+import { Loader2, Trash2, Users } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,

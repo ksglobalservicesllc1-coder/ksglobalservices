@@ -14,8 +14,9 @@ export const auth = betterAuth({
       roles: {
         user: userRole,
         admin: adminRole,
-        superAdmin: superAdminRole,
+        "super-admin": superAdminRole,
       },
+      adminRoles: ["admin", "super-admin"],
       defaultRole: "user",
     }),
   ],
@@ -25,11 +26,6 @@ export const auth = betterAuth({
       enabled: true,
       strategy: "jwt",
       maxAge: 7 * 24 * 60 * 60,
-    },
-    user: {
-      fields: {
-        role: true,
-      },
     },
   },
 

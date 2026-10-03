@@ -11,8 +11,12 @@ import {
 import { UserPlus, Users, Settings } from "lucide-react";
 import CreateAdminForm from "../../components/manageAdmin/CreateAdminForm";
 import DisplayAdmin from "../../components/manageAdmin/DisplayAdmin";
+import { useState } from "react";
 
 export default function ManageAdmin() {
+
+  const [tab, setTab] = useState("view");
+
   return (
     <div className=" bg-slate-50/50 p-4 md:p-10 mx-auto">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -33,7 +37,7 @@ export default function ManageAdmin() {
           </p>
         </header>
 
-        <Tabs defaultValue="view" className="w-full">
+        <Tabs value={tab} onValueChange={setTab} className="w-full">
           <div className="flex justify-center mb-8">
             <TabsList className="grid w-full max-w-md grid-cols-2 shadow-sm border">
               <TabsTrigger
@@ -68,7 +72,7 @@ export default function ManageAdmin() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <CreateAdminForm />
+                <CreateAdminForm onSuccess={() => setTab("view")} />
               </CardContent>
             </Card>
           </TabsContent>
