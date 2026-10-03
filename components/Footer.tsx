@@ -5,6 +5,7 @@ import { FiFacebook } from "react-icons/fi";
 import { FaInstagram } from "react-icons/fa";
 import { LuPhoneCall } from "react-icons/lu";
 import { MdOutlineMail } from "react-icons/md";
+import { IoLocationOutline } from "react-icons/io5";
 
 export const Footer = () => {
   return (
@@ -90,6 +91,12 @@ export const Footer = () => {
                 <span className="flex items-center gap-2">
                   <MdOutlineMail className="size-5" />
                   <span>Ksglobalservicesllc1@gmail.com</span>
+                </span>
+              </li>
+               <li className="hover:text-blue-500 transition-colors break-all">
+                <span className="flex items-start gap-2">
+                  <IoLocationOutline className="size-5" />
+                  <span>8421 S Orange Blossom trl 1088, Orlando, fl 32809</span>
                 </span>
               </li>
             </ul>
