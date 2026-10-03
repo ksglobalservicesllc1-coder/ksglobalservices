@@ -96,7 +96,7 @@ export const Footer = () => {
                <li className="hover:text-blue-500 transition-colors break-all">
                 <span className="flex items-start gap-2">
                   <IoLocationOutline className="size-5" />
-                  <span>8421 S Orange Blossom trl 1088, Orlando, fl 32809</span>
+                  <span>8421 S Orange Blossom trl 108, Orlando, fl 32809</span>
                 </span>
               </li>
             </ul>
