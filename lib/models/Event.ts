@@ -7,6 +7,7 @@ export interface IEvent extends Document {
   adminId: mongoose.Types.ObjectId;
   name: EventCategory;
   description?: string;
+  isFree: boolean;
   price: number;
   durationMinutes: number;
   bufferMinutes: number;
@@ -31,6 +32,7 @@ const EventSchema = new Schema<IEvent>(
       required: true,
     },
     description: String,
+    isFree: { type: Boolean, default: false },
     price: { type: Number, required: true, min: 0, default: 0 },
     durationMinutes: { type: Number, required: true, min: 1 },
     bufferMinutes: { type: Number, default: 0, min: 0 },
@@ -41,4 +43,4 @@ const EventSchema = new Schema<IEvent>(
 );
 
 export const Event =
-  mongoose.models.Event || mongoose.model<IEvent>("Event", EventSchema);
+  mongoose.models.Event || mongoose.model<IEvent>("Event", EventSchema)

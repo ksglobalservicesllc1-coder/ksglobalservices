@@ -42,6 +42,7 @@ export function EventForm({
     defaultValues: {
       name: initialData?.name ?? "Immigration & USCIS Support",
       description: initialData?.description ?? "",
+      isFree: initialData?.isFree ?? false,
       price: initialData?.price ?? 0,
       durationMinutes: initialData?.durationMinutes ?? 30,
       bufferMinutes: initialData?.bufferMinutes ?? 10,
@@ -136,6 +137,35 @@ export function EventForm({
 
             <FormField
               control={form.control}
+              name="isFree"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between p-3 rounded-lg bg-muted/20 border border-dashed">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-sm font-medium">
+                      Free Consultation
+                    </FormLabel>
+                    <p className="text-xs text-muted-foreground">
+                      Clients won&apos;t be charged for this service
+                    </p>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked);
+                        if (checked) {
+                          form.setValue("price", 0);
+                        }
+                      }}
+                      className="cursor-pointer data-[state=checked]:bg-emerald-500"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="price"
               render={({ field }) => (
                 <FormItem>
@@ -144,9 +174,11 @@ export function EventForm({
                     <Input
                       type="number"
                       step="0.01"
-                      placeholder="0.00"
+                      placeholder={form.watch("isFree") ? "Free" : "0.00"}
                       {...field}
                       value={field.value as number | string}
+                      disabled={form.watch("isFree")}
+                      className={form.watch("isFree") ? "opacity-50" : ""}
                     />
                   </FormControl>
                   <FormMessage />

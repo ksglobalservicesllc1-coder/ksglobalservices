@@ -12,6 +12,8 @@ export interface IBooking extends Document {
   phoneNumber?: string;
   zoomJoinUrl?: string;
   zoomStartUrl?: string;
+  paymentStatus: "unpaid" | "paid" | "free";
+  paymentIntentId?: string;
   stripeSessionId?: string;
   expiresAt: Date;
   createdAt: Date;
@@ -38,6 +40,12 @@ const BookingSchema = new Schema<IBooking>(
     phoneNumber: { type: String },
     zoomJoinUrl: { type: String },
     zoomStartUrl: { type: String },
+    paymentStatus: {
+      type: String,
+      enum: ["unpaid", "paid", "free"],
+      default: "unpaid",
+    },
+    paymentIntentId: { type: String },
     stripeSessionId: { type: String },
     expiresAt: { type: Date, required: true },
   },

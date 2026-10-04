@@ -24,7 +24,7 @@ export async function getEventsByAdmin(adminId: string) {
       isActive: true,
       adminId: new mongoose.Types.ObjectId(adminId),
     })
-      .select("name description price durationMinutes")
+      .select("name description price isFree durationMinutes")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -33,6 +33,7 @@ export async function getEventsByAdmin(adminId: string) {
       name: event.name,
       description: event.description || null,
       price: event.price,
+      isFree: event.isFree ?? event.price === 0,  
       durationMinutes: event.durationMinutes,
     }));
 
@@ -72,7 +73,7 @@ export async function getEventById(eventId: string) {
       _id: new mongoose.Types.ObjectId(eventId),
       isActive: true,
     })
-      .select("name description price durationMinutes adminId")
+      .select("name description price isFree durationMinutes adminId")
       .lean();
 
     if (!event) {
@@ -99,6 +100,7 @@ export async function getEventById(eventId: string) {
       name: event.name,
       description: event.description || null,
       price: event.price,
+      isFree: event.isFree ?? event.price === 0,
       durationMinutes: event.durationMinutes,
       // Provide hostRole so the frontend can toggle Video Call
       hostRole: adminUser?.role || "user",

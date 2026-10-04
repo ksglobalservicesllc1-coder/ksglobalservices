@@ -35,6 +35,7 @@ interface EventCardProps {
     _id: string;
     name: string;
     description?: string;
+    isFree?: boolean;
     price: number;
     durationMinutes: number;
     bufferMinutes?: number;
@@ -82,7 +83,13 @@ export function EventCard({ event, onDelete, isDeleting }: EventCardProps) {
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-muted-foreground" />
-            <span className="font-semibold">{formatPrice(event.price)}</span>
+            <span className="font-semibold">
+              {event.isFree ? (
+                <Badge className="bg-emerald-600/70 text-white">Free</Badge>
+              ) : (
+                formatPrice(event.price)
+              )}
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-muted-foreground" />

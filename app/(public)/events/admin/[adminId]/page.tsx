@@ -62,8 +62,12 @@ export default async function AdminDetails({ params }: AdminDetailsProps) {
                       <Clock className="w-4 h-4 text-blue-500" />
                       {event.durationMinutes} mins
                     </span>
-                    <span className="text-blue-600 font-bold">
-                      ${event.price}
+                    <span className="font-bold text-slate-900">
+                      {event.isFree ?? event.price === 0 ? (
+                        <span className="text-emerald-600">Free</span>
+                      ) : (
+                        `$${event?.price}`
+                      )}
                     </span>
                   </div>
 

@@ -163,7 +163,12 @@ export default function EventDetails({ params }: Props) {
         consultationType,
         phoneNumber: consultationType === "phone" ? phoneNumber : undefined,
       });
-      if (res?.checkoutUrl) window.location.href = res.checkoutUrl;
+      if (res?.isFree) {
+        // Free booking — go directly to success page
+        window.location.href = `${window.location.origin}/booking/success?id=${res.bookingId}`;
+      } else if (res?.checkoutUrl) {
+        window.location.href = res.checkoutUrl;
+      }
     } catch (err) {
       setError("Payment initialization failed. Please try again.");
     } finally {
@@ -215,7 +220,11 @@ export default function EventDetails({ params }: Props) {
                   <CreditCard className="w-4 h-4" /> Price
                 </span>
                 <span className="font-bold text-slate-900">
-                  ${event?.price}
+                  {event.isFree ?? event.price === 0 ? (
+                    <span className="text-emerald-600">Free</span>
+                  ) : (
+                    `$${event?.price}`
+                  )}
                 </span>
               </div>
             </div>
@@ -427,8 +436,10 @@ export default function EventDetails({ params }: Props) {
                   >
                     {bookingLoading
                       ? "Processing..."
-                      : `Complete Booking — $${event?.price}`}
-                    <CreditCard className="w-5 h-5" />
+                      : event?.isFree ?? event?.price === 0
+                        ? "Confirm Free Booking"
+                        : `Complete Booking — $${event?.price}`}
+                    {!event?.isFree && <CreditCard className="w-5 h-5" />}
                   </button>
                 </div>
               )}

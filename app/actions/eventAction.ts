@@ -5,7 +5,7 @@ import connectDB from "@/lib/db";
 import { Event } from "@/lib/models/Event";
 import mongoose from "mongoose";
 import { verifyAdmin } from "@/lib/auth/check-auth";
-import { EventFormData } from "@/lib/schemas/event.schema";
+import { eventSchema, EventFormData } from "@/lib/schemas/event.schema";
 import { notFound } from "next/navigation";
 
 const validateObjectId = (id: unknown) => {
@@ -20,9 +20,17 @@ export const createEvent = async (data: EventFormData) => {
   await connectDB();
   const user = await verifyAdmin();
 
+  // Server-side validation — NEVER trust the client
+  const parsed = eventSchema.parse(data);
+
+  // Enforce: free consultations always have price = 0
+  if (parsed.isFree) {
+    parsed.price = 0;
+  }
+
   const event = await Event.create({
     adminId: user.id,
-    ...data,
+    ...parsed,
   });
 
   revalidatePath("/dashboard/events");
@@ -66,9 +74,17 @@ export const updateEvent = async (
   const user = await verifyAdmin();
   const id = validateObjectId(eventId);
 
+  // Server-side validation
+  const parsed = eventSchema.parse(data);
+
+  // Enforce: free consultations always have price = 0
+  if (parsed.isFree) {
+    parsed.price = 0;
+  }
+
   const updated = await Event.findOneAndUpdate(
     { _id: id, adminId: user.id },
-    data,
+    parsed,
     { new: true },
   ).lean();
 
@@ -133,6 +149,6 @@ export async function getAdminsByEventName(eventName: string) {
     return { success: true, data: admins };
   } catch (error) {
     console.error(error);
-    return { success: false, error: "Failed to fetch admins" };
+    return { success: false, error: "Failed to fetch admins" }
   }
 }
